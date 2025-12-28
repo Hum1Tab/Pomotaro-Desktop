@@ -21,7 +21,8 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true,
         },
-        icon: path.join(__dirname, '../icon.png')
+        icon: path.join(__dirname, '../icon.png'),
+        autoHideMenuBar: true, // Hide the default menu bar
     });
 
     // Check for updates
@@ -109,6 +110,9 @@ function setActivity() {
         largeImageKey: 'pomotaro_logo',
         largeImageText: 'Pomotaro',
         instance: false,
+        buttons: [
+            { label: 'Get App', url: 'https://github.com/Hum1Tab/Pomotaro-Desktop' }
+        ]
     });
 }
 
@@ -120,6 +124,9 @@ ipcMain.handle('update-activity', (_, activity) => {
         rpc.setActivity({
             ...activity,
             instance: false,
+            buttons: [
+                { label: 'Get App', url: 'https://github.com/Hum1Tab/Pomotaro-Desktop' }
+            ]
         });
     }
 });
