@@ -3,7 +3,7 @@ import path from 'path';
 import DiscordRPC from 'discord-rpc';
 import { autoUpdater } from 'electron-updater';
 
-const clientId = '1322899016140521482'; // User's Discord Application ID
+const clientId = '1454874975994515723'; // User's Discord Application ID
 
 let mainWindow: BrowserWindow | null;
 let tray: Tray | null = null;
