@@ -113,8 +113,12 @@ function createWindow() {
     });
 
 
-    // Check for updates
-    autoUpdater.checkForUpdatesAndNotify();
+    // Check for updates only in production
+    if (app.isPackaged) {
+        autoUpdater.checkForUpdatesAndNotify().catch(err => {
+            console.error('Auto update error:', err);
+        });
+    }
 
     // System Tray Implementation
     tray = new Tray(path.join(__dirname, '../icon.png'));
@@ -187,8 +191,13 @@ function initDiscordRpc() {
         setActivity();
     });
 
-    rpc.login({ clientId }).catch(console.error);
+    // Handle potential connection errors gracefully
+    rpc.login({ clientId }).catch(err => {
+        console.log('Discord RPC connection failed (Discord might be closed):', err.message);
+        rpc = null;
+    });
 }
+
 
 function setActivity() {
     if (!rpc) return;
