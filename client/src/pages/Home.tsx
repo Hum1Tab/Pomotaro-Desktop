@@ -9,6 +9,7 @@ import { useSound } from '@/hooks/useSound';
 import { useWhiteNoise } from '@/hooks/useWhiteNoise';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTheme } from '@/hooks/useTheme';
+import { useAppearance } from '@/contexts/AppearanceContext'; // Added
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Moon, Sun, Maximize2, Minimize2, Timer, Watch, Layers, BarChart2, Calendar, Wrench, Waves } from 'lucide-react';
@@ -42,6 +43,8 @@ import { FallingTomato } from '@/components/FallingTomato';
  */
 import { useLanguage } from '@/hooks/useLanguage';
 
+import { DigitalClock } from '@/components/DigitalClock';
+
 export default function Home() {
   const [, setLocation] = useLocation();
 
@@ -53,7 +56,11 @@ export default function Home() {
   const { isPlaying: isNoisePlaying, toggle: toggleNoise } = useWhiteNoise();
   const notifications = useNotifications();
   const { theme, setLightTheme, setDarkTheme } = useTheme();
+  const appearanceSettings_hook = useAppearance(); // Renamed to get the whole object
+  const { settings: appearanceSettings } = appearanceSettings_hook;
   const { t, language, changeLanguage } = useLanguage();
+
+
 
   const [activeTab, setActiveTab] = useState('timer');
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
@@ -85,6 +92,85 @@ export default function Home() {
       }
     });
   }, [pomodoro, history, sound, notifications]);
+
+  // Handle Focus Mode Enter/Exit for Fullscreen
+  useEffect(() => {
+    if (window.electronAPI && window.electronAPI.toggleFullscreen) {
+      window.electronAPI.toggleFullscreen(isFocusMode);
+    }
+  }, [isFocusMode]);
+
+  // Handle Window Size Synchronization
+  const prevCompactRef = useState(appearanceSettings.isCompact)[0];
+  const [currentCompact, setCurrentCompact] = useState(appearanceSettings.isCompact);
+
+  useEffect(() => {
+    const syncSize = async () => {
+      if (window.electronAPI?.setWindowSize && window.electronAPI.isMaximized) {
+        const maximized = await window.electronAPI.isMaximized();
+
+        if (appearanceSettings.isCompact) {
+          // Entering or staying in compact mode
+          window.electronAPI.setWindowSize(300, 450);
+          window.electronAPI.setAlwaysOnTop(true);
+        } else if (currentCompact !== appearanceSettings.isCompact && !maximized) {
+          // ONLY restore default size if we just EXITED compact mode
+          window.electronAPI.setWindowSize(1200, 800);
+          window.electronAPI.setAlwaysOnTop(pomodoro.settings.alwaysOnTop);
+        } else {
+          // Just sync always on top without resizing
+          window.electronAPI.setAlwaysOnTop(pomodoro.settings.alwaysOnTop);
+        }
+        setCurrentCompact(appearanceSettings.isCompact);
+      }
+    };
+    syncSize();
+  }, [appearanceSettings.isCompact, pomodoro.settings.alwaysOnTop]);
+
+
+
+
+
+  // Ensure Focus Mode and Compact Mode are mutually exclusive
+  useEffect(() => {
+    if (isFocusMode && appearanceSettings.isCompact) {
+      // Prioritize the most recently changed state
+      // If we just entered focus mode, disable compact
+      // If we just entered compact mode, disable focus
+      // This is handled simply by checking which one is active and turning off the other
+      // Note: In practical use, the user usually toggles one.
+      // If both are true, we turn off compact mode to show the fullscreen overlay
+      const { updateSettings: updateAppearance } = appearanceSettings_hook;
+      updateAppearance({ isCompact: false });
+    }
+  }, [isFocusMode, appearanceSettings.isCompact]);
+
+  // Listen for Native Window Events
+  useEffect(() => {
+    if (window.electronAPI?.onWindowStateChanged) {
+      window.electronAPI.onWindowStateChanged((state: string) => {
+        if (state === 'maximized') {
+          // Force exit compact mode when window is maximized via OS
+          const { updateSettings: updateAppearance } = appearanceSettings_hook;
+          updateAppearance({ isCompact: false });
+        }
+      });
+    }
+  }, []); // Only register once
+
+  // Trigger Tick Sound
+  useEffect(() => {
+    if (pomodoro.isRunning && pomodoro.timeLeft > 0 && sound.settings.playTickSound) {
+      sound.playTickSound();
+    }
+  }, [pomodoro.timeLeft, pomodoro.isRunning, sound.settings.playTickSound, sound]);
+
+
+
+
+
+
+
 
   const handleAddTask = (title: string, estimatedPomodoros: number) => {
     tasks.addTask(title, estimatedPomodoros);
@@ -118,11 +204,50 @@ export default function Home() {
     toggleSettings: () => setLocation('/settings'),
   });
 
+  const toggleCompactMode = async () => {
+    const newCompactState = !appearanceSettings.isCompact;
+    const { updateSettings: updateAppearance } = appearanceSettings_hook;
+    updateAppearance({ isCompact: newCompactState });
+
+    // If entering compact mode, ensure focus mode is off
+    if (newCompactState && isFocusMode) {
+      setIsFocusMode(false);
+    }
+  };
+
+
+
+
+
+
+  const goToSettings = async () => {
+    sound.playClickSound();
+    if (window.electronAPI?.setWindowSize && window.electronAPI.isMaximized) {
+      const maximized = await window.electronAPI.isMaximized();
+      if (!maximized) {
+        await window.electronAPI.setWindowSize(1200, 800);
+      }
+      await window.electronAPI.setAlwaysOnTop(false);
+    }
+    setLocation('/settings');
+  };
+
+
+
+
   return (
-    <div className="min-h-screen transition-colors duration-500">
-      {/* Main Content */}
+    <div className="min-h-screen transition-colors duration-500 relative">
+      {/* Home Clock - Top Left */}
       {!isFocusMode && (
+        <div className="absolute top-6 left-6 z-10 opacity-80 hover:opacity-100 transition-opacity hidden sm:block">
+          <DigitalClock />
+        </div>
+      )}
+
+      {/* Main Content */}
+      {!isFocusMode && !appearanceSettings.isCompact && (
         <main className="container mx-auto px-4 py-8 pb-32 max-w-4xl animate-fade-in-up">
+
 
           {/* Main Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -174,16 +299,23 @@ export default function Home() {
                     )}
                   </Button>
                   <Button
-                    onClick={() => {
-                      sound.playClickSound();
-                      setLocation('/settings');
-                    }}
+                    onClick={() => setIsFocusMode(!isFocusMode)}
+                    variant="ghost"
+                    size="icon"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full text-foreground/80 hover:text-foreground hover:bg-muted/50 transition-all"
+                    title={t('timer.enterFocusMode')}
+                  >
+                    <Maximize2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </Button>
+                  <Button
+                    onClick={goToSettings}
                     variant="ghost"
                     size="icon"
                     className="w-10 h-10 sm:w-12 sm:h-12 rounded-full text-foreground/80 hover:text-foreground hover:bg-muted/50 transition-all"
                   >
                     <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
                   </Button>
+
                 </div>
               </div>
             </div>
@@ -313,6 +445,64 @@ export default function Home() {
           </Tabs>
         </main>
       )}
+
+      {/* Compact Mode Layout */}
+      {!isFocusMode && appearanceSettings.isCompact && (
+        <main className="fixed inset-0 flex flex-col items-center justify-center p-4 animate-fade-in">
+          {/* Mini Header */}
+          <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-50">
+            <Button
+              onClick={goToSettings}
+              variant="ghost"
+              size="icon"
+              className="bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+
+
+            <Button
+              onClick={toggleNoise}
+              variant="ghost"
+              size="icon"
+              className={`bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white ${isNoisePlaying ? 'animate-pulse text-white' : ''}`}
+              title={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')}
+            >
+              <Waves className="w-5 h-5" />
+            </Button>
+
+            <Button
+              onClick={toggleCompactMode}
+              variant="ghost"
+              size="icon"
+              className="bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white"
+              title={t('settings.compactDisable')}
+            >
+              <Maximize2 className="w-5 h-5" />
+            </Button>
+
+          </div>
+
+          <div className="flex flex-col items-center gap-6">
+            <TimerDisplay
+              timeLeft={pomodoro.timeLeft}
+              sessionType={pomodoro.sessionType}
+            />
+
+            <TimerControls
+              isRunning={pomodoro.isRunning}
+              onStart={handleStartTimer}
+              onPause={pomodoro.pause}
+              onReset={pomodoro.reset}
+            />
+
+            <div className="text-sm font-medium text-white/60 bg-white/5 px-3 py-1 rounded-full backdrop-blur-sm">
+              {pomodoro.sessionType === 'pomodoro' ? t('timer.focusTime') : t('timer.breakTime')}
+            </div>
+          </div>
+        </main>
+      )}
+
 
       {/* Focus Mode Overlay */}
       {isFocusMode && (

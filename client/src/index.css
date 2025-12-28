@@ -133,6 +133,7 @@
     @apply bg-background text-foreground;
     /* 日本語に最適化されたフォント設定 */
     font-family:
+      'Zen Maru Gothic',
       'Noto Sans JP',
       'Hiragino Kaku Gothic ProN',
       'Hiragino Sans',
@@ -223,7 +224,7 @@
   }
 
   .glass-panel {
-    @apply bg-card/60 backdrop-blur-xl border border-white/20 shadow-xl;
+    @apply bg-card/60 backdrop-blur-xl border border-white/20 shadow-xl rounded-2xl;
   }
 
   .glass-button {

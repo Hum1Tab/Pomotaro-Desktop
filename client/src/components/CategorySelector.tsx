@@ -39,16 +39,21 @@ export function CategorySelector() {
   ];
 
   const COLOR_PALETTE = [
-    // 暖色系
-    '#E8644A', '#F5A76B', '#E67E22', '#E74C3C', '#FF6B9D',
-    // 寒色系
-    '#4A9EE8', '#3498DB', '#5DADE2', '#7BA3A0', '#16A085',
-    // 緑系
-    '#8B9D83', '#27AE60', '#2ECC71', '#52BE80',
-    // 紫系
-    '#9B59B6', '#8E44AD', '#AF7AC5',
-    // 中間色
-    '#D4B4A0', '#C9A88A', '#95A5A6'
+    // 日本の伝統色・自然色 (落ち着いたトーン)
+    '#E57373', // 珊瑚色 (Coral Red)
+    '#F06292', // 桃色 (Pink)
+    '#BA68C8', // 藤色 (Lavender)
+    '#9575CD', // 江戸紫 (Purple)
+    '#7986CB', // 藍鼠 (Indigo)
+    '#64B5F6', // 勿忘草 (Sky Blue)
+    '#4FC3F7', // 空色 (Light Blue)
+    '#4DB6AC', // 青竹色 (Teal)
+    '#81C784', // 若草色 (Light Green)
+    '#AED581', // 萌黄色 (Lime Green)
+    '#FFD54F', // 山吹色 (Amber)
+    '#FFB74D', // 杏色 (Orange)
+    '#A1887F', // 栗色 (Brown)
+    '#90A4AE', // 銀鼠 (Blue Grey)
   ];
 
   const displayedIcons = showAllIcons ? ICON_OPTIONS : ICON_OPTIONS.slice(0, 12);
@@ -59,7 +64,7 @@ export function CategorySelector() {
       addCategory(newCategoryName, finalColor, newCategoryIcon);
       setNewCategoryName('');
       setNewCategoryIcon('📚');
-      setNewCategoryColor('#E8644A');
+      setNewCategoryColor('#E57373');
       setCustomColor('');
       setShowAddForm(false);
       setShowAllIcons(false);
@@ -81,34 +86,47 @@ export function CategorySelector() {
       {/* Current Selection Display */}
       {selectedCategory && (
         <div
-          className="p-6 rounded-lg text-white text-center space-y-2"
-          style={{ backgroundColor: selectedCategory.color }}
+          className="p-6 rounded-xl border-2 transition-all duration-300 text-center space-y-2 shadow-sm"
+          style={{
+            borderColor: selectedCategory.color,
+            backgroundColor: `${selectedCategory.color}15`, // Very light tint 15%
+          }}
         >
-          <div className="text-4xl">{selectedCategory.icon}</div>
-          <div className="text-sm font-medium opacity-90">{t('categories.current')}</div>
-          <div className="text-2xl font-bold">{selectedCategory.name}</div>
+          <div className="text-5xl drop-shadow-sm" style={{ color: selectedCategory.color }}>{selectedCategory.icon}</div>
+          <div className="text-sm font-bold opacity-80 tracking-widest uppercase text-muted-foreground">{t('categories.current')}</div>
+          <div className="text-3xl font-bold tracking-wide text-foreground">{selectedCategory.name}</div>
         </div>
       )}
 
       {/* Category Grid */}
       <div className="space-y-3">
-        <label className="text-sm font-semibold text-foreground">{t('categories.select')}</label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <label className="text-sm font-bold text-foreground tracking-wide pl-1">{t('categories.select')}</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {categories.map((category) => (
             <button
               key={category.id}
               onClick={() => setSelectedCategoryId(category.id)}
-              className={`p-4 rounded-lg transition-all ${selectedCategoryId === category.id
-                ? 'ring-2 ring-offset-2 ring-foreground scale-105'
-                : 'hover:scale-105'
+              className={`p-4 rounded-xl transition-all duration-200 border-2 text-left flex items-center gap-3 group relative overflow-hidden ${selectedCategoryId === category.id
+                ? 'ring-2 ring-offset-2 ring-primary shadow-md scale-[1.02]'
+                : 'hover:scale-[1.02] hover:shadow-sm opacity-90 hover:opacity-100'
                 }`}
               style={{
-                backgroundColor: category.color,
-                color: 'white',
+                borderColor: category.color,
+                backgroundColor: `${category.color}20`, // 20% opacity background
               }}
             >
-              <div className="text-2xl mb-1">{category.icon}</div>
-              <div className="text-xs font-medium truncate">{category.name}</div>
+              {/* Decorative side bar */}
+              <div
+                className="absolute left-0 top-0 bottom-0 w-1.5"
+                style={{ backgroundColor: category.color }}
+              />
+
+              <div className="text-3xl group-hover:scale-110 transition-transform duration-200 pl-2" style={{ color: category.color }}>
+                {category.icon}
+              </div>
+              <div className="text-sm font-bold truncate tracking-wide text-foreground">
+                {category.name}
+              </div>
             </button>
           ))}
         </div>
@@ -144,8 +162,8 @@ export function CategorySelector() {
                     key={icon}
                     onClick={() => setNewCategoryIcon(icon)}
                     className={`p-2 rounded-lg text-xl transition-all ${newCategoryIcon === icon
-                        ? 'bg-primary text-primary-foreground ring-2 ring-offset-2 ring-primary'
-                        : 'bg-secondary hover:bg-secondary/80'
+                      ? 'bg-primary text-primary-foreground ring-2 ring-offset-2 ring-primary'
+                      : 'bg-secondary hover:bg-secondary/80'
                       }`}
                   >
                     {icon}
@@ -172,8 +190,8 @@ export function CategorySelector() {
                     key={color}
                     onClick={() => setNewCategoryColor(color)}
                     className={`h-10 rounded-lg transition-all ${newCategoryColor === color
-                        ? 'ring-2 ring-offset-2 ring-primary scale-110'
-                        : 'hover:scale-110'
+                      ? 'ring-2 ring-offset-2 ring-primary scale-110'
+                      : 'hover:scale-110'
                       }`}
                     style={{ backgroundColor: color }}
                   />
@@ -224,12 +242,13 @@ export function CategorySelector() {
           {categories.map((category) => (
             <div
               key={category.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+              className="flex items-center justify-between p-3 rounded-lg border bg-card/30 hover:bg-card transition-all group"
+              style={{ borderColor: `${category.color}40` }} // Low opacity border
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-lg"
-                  style={{ backgroundColor: category.color }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-lg border-2 bg-card"
+                  style={{ borderColor: category.color }}
                 >
                   {category.icon}
                 </div>

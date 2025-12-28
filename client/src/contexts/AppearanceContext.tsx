@@ -2,18 +2,34 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 
 export type BackgroundType = 'gradient' | 'image' | 'video';
 
+// Preset Themes
+export type PresetTheme = 'default' | 'sakura' | 'matcha' | 'ajisai' | 'kuri' | 'custom';
+
+export const THEME_PRESETS: Record<PresetTheme, { name: string; colors: [string, string] }> = {
+    default: { name: '蜜柑 (Mikan)', colors: ['#FFD200', '#F7971E'] },
+    sakura: { name: '桜 (Sakura)', colors: ['#ff9a9e', '#fecfef'] },
+    matcha: { name: '抹茶 (Matcha)', colors: ['#84fab0', '#8fd3f4'] }, // Adjusted for fresh look
+    ajisai: { name: '紫陽花 (Ajisai)', colors: ['#a18cd1', '#fbc2eb'] },
+    kuri: { name: '栗 (Kuri)', colors: ['#dfd2c0', '#d8cbb6'] }, // Gentle beige/brown
+    custom: { name: 'カスタム', colors: ['#FFD200', '#F7971E'] }
+};
+
 export interface AppearanceSettings {
     backgroundType: BackgroundType;
+    backgroundTheme: PresetTheme; // Added
     gradientColors: [string, string];
     mediaUrl: string;
     bgOpacity: number;
+    isCompact: boolean; // Added
 }
 
 const DEFAULT_SETTINGS: AppearanceSettings = {
     backgroundType: 'gradient',
-    gradientColors: ['#FFD200', '#F7971E'], // Default Orange Gradient
+    backgroundTheme: 'default', // Added
+    gradientColors: THEME_PRESETS.default.colors,
     mediaUrl: '',
     bgOpacity: 0.2, // For media overlay
+    isCompact: false, // Added
 };
 
 interface AppearanceContextType {
@@ -55,22 +71,28 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     };
 
     const updateSettings = (newSettings: Partial<AppearanceSettings>) => {
-        setSettings(prev => ({ ...prev, ...newSettings }));
+        setSettings(prev => {
+            const updated = { ...prev, ...newSettings };
+
+            // If isCompact changed, potentially do side effects if needed
+            // However, we rely on the component using the hook to call Electron API for now
+            // or we can centralize it here.
+            return updated;
+        });
     };
 
     return (
         <AppearanceContext.Provider value={{ settings, updateSettings }}>
             {/* Background Layer */}
             <div className="fixed inset-0 -z-50 transition-all duration-700 ease-in-out overflow-hidden">
-                {settings.backgroundType === 'gradient' && (
-                    <div
-                        className="absolute inset-0 bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)]"
-                        style={{
-                            background: `linear-gradient(135deg, ${settings.gradientColors[0]} 0%, ${settings.gradientColors[1]} 100%)`,
-                            backgroundAttachment: 'fixed'
-                        }}
-                    />
-                )}
+                <div
+                    className="absolute inset-0 bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)]"
+                    style={{
+                        background: `linear-gradient(135deg, ${settings.gradientColors[0]} 0%, ${settings.gradientColors[1]} 100%)`,
+                        backgroundAttachment: 'fixed',
+                        zIndex: -2 // Ensure it stays behind media
+                    }}
+                />
 
                 {(settings.backgroundType === 'image' || settings.backgroundType === 'video') && settings.mediaUrl && (
                     <>

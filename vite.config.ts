@@ -5,19 +5,19 @@ import fs from "node:fs";
 import path from "path";
 import { defineConfig } from "vite";
 
-// import electron from "vite-plugin-electron/simple";
+import electron from "vite-plugin-electron/simple";
 
 const plugins = [
   react(),
   tailwindcss(),
-  // electron({
-  //   main: {
-  //     entry: "electron/main.ts",
-  //   },
-  //   preload: {
-  //     input: "electron/preload.ts",
-  //   },
-  // }),
+  electron({
+    main: {
+      entry: path.resolve(__dirname, "electron/main.ts"),
+    },
+    preload: {
+      input: path.resolve(__dirname, "electron/preload.ts"),
+    },
+  }),
 ];
 
 export default defineConfig({

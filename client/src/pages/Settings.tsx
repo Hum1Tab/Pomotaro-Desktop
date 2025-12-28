@@ -1,883 +1,561 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { ChevronLeft, Check, X } from 'lucide-react';
-import { useLanguage } from '@/hooks/useLanguage';
 import { usePomodoro, PomodoroSettings } from '@/hooks/usePomodoro';
 import { useSoundContext, SoundSettings } from '@/contexts/SoundContext';
-import { useAppearance, AppearanceSettings } from '@/contexts/AppearanceContext';
+import { useAppearance, AppearanceSettings, THEME_PRESETS, PresetTheme } from '@/contexts/AppearanceContext';
+import { useLanguage } from '@/hooks/useLanguage';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
-import { Palette, Image as ImageIcon, Video, Link } from 'lucide-react';
-
-declare global {
-    interface Window {
-        electronAPI?: {
-            setAlwaysOnTop: (flag: boolean) => Promise<void>;
-            setProgressBar: (progress: number) => Promise<void>;
-        };
-    }
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+    Palette, Image as ImageIcon, Video, Link, Volume2, Clock,
+    Layout, Maximize2, Minimize2, ChevronLeft, Save, Upload, Download
+} from 'lucide-react';
 
 export default function Settings() {
     const [, setLocation] = useLocation();
-    const { t, language, changeLanguage } = useLanguage();
     const { settings, updateSettings } = usePomodoro();
-    const { settings: soundSettings, updateSettings: updateSoundSettings } = useSoundContext();
-    const { settings: appearanceSettings, updateSettings: updateAppearanceSettings } = useAppearance();
+    const sound = useSoundContext();
+    const { settings: appearanceSettings, updateSettings: updateAppearance } = useAppearance();
+    const { language, changeLanguage, t } = useLanguage();
+    const { requestPermission } = useNotifications();
 
-    const [tempSettings, setTempSettings] = useState<PomodoroSettings>(settings);
-    const [tempSoundSettings, setTempSoundSettings] = useState<SoundSettings>(soundSettings);
+    // Local state for immediate feedback
+    const [tempPomoSettings, setTempPomoSettings] = useState<PomodoroSettings>(settings);
+    const [tempSoundSettings, setTempSoundSettings] = useState<SoundSettings>(sound.settings);
     const [tempAppearanceSettings, setTempAppearanceSettings] = useState<AppearanceSettings>(appearanceSettings);
 
-    const [initialSettings, setInitialSettings] = useState<PomodoroSettings>(settings);
-    const [initialSoundSettings, setInitialSoundSettings] = useState<SoundSettings>(soundSettings);
-    const isInitializedRef = useRef(false);
 
-    // 設定画面を開いたときに最新の設定を読み込む
-    // 設定画面を開いたときに最新の設定を読み込む
+
     useEffect(() => {
-        if (JSON.stringify(settings) !== JSON.stringify(tempSettings)) {
-            setTempSettings(settings);
-        }
-        if (JSON.stringify(soundSettings) !== JSON.stringify(tempSoundSettings)) {
-            setTempSoundSettings(soundSettings);
-        }
-        if (JSON.stringify(appearanceSettings) !== JSON.stringify(tempAppearanceSettings)) {
-            setTempAppearanceSettings(appearanceSettings);
-        }
+        setTempPomoSettings(settings);
+    }, [settings]);
 
-        // Initial values technically don't need real-time sync back, but good to keep updated
-        setInitialSettings(settings);
-        setInitialSoundSettings(soundSettings);
-
-        // isInitializedRef is no longer strictly needed for blocking, but we keep the concept if needed
-        isInitializedRef.current = false;
-    }, [settings, soundSettings, appearanceSettings]);
-
-    // リアルタイムで見た目を更新
     useEffect(() => {
-        // 初回レンダリング時も適用して問題ない、あるいは変更があった時のみ適用
-        updateAppearanceSettings(tempAppearanceSettings);
-    }, [tempAppearanceSettings]);
+        setTempSoundSettings(sound.settings);
+    }, [sound.settings]);
 
-    // リアルタイムで設定を更新（完了時刻などを即座に反映）
     useEffect(() => {
-        updateSettings(tempSettings);
-    }, [tempSettings]);
-
-    // 音量変更をリアルタイムで反映
-    useEffect(() => {
-        updateSoundSettings(tempSoundSettings);
-    }, [tempSoundSettings.volume, tempSoundSettings.whiteNoiseVolume, tempSoundSettings.noiseType]);
+        setTempAppearanceSettings(appearanceSettings);
+    }, [appearanceSettings]);
 
     const handleSave = () => {
-        updateSettings(tempSettings);
-        updateSoundSettings(tempSoundSettings);
-        updateAppearanceSettings(tempAppearanceSettings);
+        updateSettings(tempPomoSettings);
+        sound.updateSettings(tempSoundSettings);
+        updateAppearance(tempAppearanceSettings);
         setLocation('/');
     };
 
-    const handleCancel = () => {
-        // キャンセル時は設定を元に戻す
-        updateSoundSettings(initialSoundSettings);
-        setLocation('/');
+    const toggleCompactMode = async () => {
+        const newCompactState = !appearanceSettings.isCompact;
+        updateAppearance({ isCompact: newCompactState });
+
+        if (newCompactState) {
+            setLocation('/'); // Redirect to Home immediately to avoid "ugly" settings view
+        }
     };
+
+
+    // Ensure settings page is large enough to be readable
+    useEffect(() => {
+        const syncSize = async () => {
+            if (window.electronAPI?.setWindowSize && window.electronAPI.isMaximized) {
+                const maximized = await window.electronAPI.isMaximized();
+                if (!maximized) {
+                    // Check if current window is too small (e.g. from compact mode)
+                    // We don't have a direct "getWindowSize" but we can assume if we are not maximized
+                    // and we just came from Home, we might need a reset.
+                    // To be safe and respect manual resize, we only resize if it's likely we were compact.
+                    // Actually, a simpler way is to just NOT force 1200x800 here unless we know we were compact.
+                    // Since Settings page is only accessible from Home, and Home handles its own compact state,
+                    // we can rely on the fact that goToSettings in Home.tsx already handles the resize if needed.
+                }
+                window.electronAPI.setAlwaysOnTop(false);
+            }
+        };
+        syncSize();
+    }, []);
+
+
+
+
+
 
     return (
-        <div className="min-h-screen bg-background p-4 animate-fade-in-up">
-            <div className="container mx-auto max-w-2xl space-y-6">
+        <div className="min-h-screen bg-background p-4 sm:p-8 animate-fade-in">
+            <div className="max-w-3xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 mb-8">
                     <Button
-                        onClick={handleCancel}
                         variant="ghost"
                         size="icon"
-                        className="text-foreground"
+                        onClick={() => setLocation('/')}
+                        className="rounded-full hover:bg-muted"
                     >
                         <ChevronLeft className="w-6 h-6" />
                     </Button>
                     <h1 className="text-2xl font-bold text-foreground">{t('settings.title')}</h1>
                 </div>
 
-                <Card className="p-6 bg-card shadow-warm space-y-6">
-                    {/* Language Settings */}
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                            {t('settings.language')}
-                        </h2>
-                        <div className="flex gap-2">
-                            <Button
-                                variant={language === 'en' ? 'default' : 'outline'}
-                                onClick={() => changeLanguage('en')}
-                                className="flex-1"
-                            >
-                                English
-                            </Button>
-                            <Button
-                                variant={language === 'ja' ? 'default' : 'outline'}
-                                onClick={() => changeLanguage('ja')}
-                                className="flex-1"
-                            >
-                                日本語
-                            </Button>
-                        </div>
-                    </div>
+                <Card className="p-6 glass-panel min-h-[500px]">
+                    <Tabs defaultValue="general" className="w-full">
+                        <TabsList className="grid w-full grid-cols-4 mb-8">
+                            <TabsTrigger value="general" className="gap-2"><Layout className="w-4 h-4" /> {t('settings.tab.general')}</TabsTrigger>
+                            <TabsTrigger value="timer" className="gap-2"><Clock className="w-4 h-4" /> {t('settings.tab.timer')}</TabsTrigger>
+                            <TabsTrigger value="appearance" className="gap-2"><Palette className="w-4 h-4" /> {t('settings.tab.appearance')}</TabsTrigger>
+                            <TabsTrigger value="sound" className="gap-2"><Volume2 className="w-4 h-4" /> {t('settings.tab.sound')}</TabsTrigger>
+                        </TabsList>
 
-                    {/* Appearance Settings */}
-                    <div className="space-y-4 pt-4 border-t border-border">
-                        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                            <Palette className="w-5 h-5" /> {t('settings.appearance') || '外観'}
-                        </h2>
+                        {/* General Tab */}
+                        <TabsContent value="general" className="space-y-6 animate-fade-in">
+                            <div className="space-y-6">
+                                <h3 className="text-lg font-medium">{t('settings.section.display')}</h3>
 
-                        <div className="space-y-4">
-                            {/* Background Type */}
-                            <div className="grid grid-cols-3 gap-2">
-                                <Button
-                                    variant={tempAppearanceSettings.backgroundType === 'gradient' ? 'default' : 'outline'}
-                                    onClick={() => setTempAppearanceSettings({ ...tempAppearanceSettings, backgroundType: 'gradient' })}
-                                    className="gap-2"
-                                >
-                                    <Palette className="w-4 h-4" /> Gradient
-                                </Button>
-                                <Button
-                                    variant={tempAppearanceSettings.backgroundType === 'image' ? 'default' : 'outline'}
-                                    onClick={() => setTempAppearanceSettings({ ...tempAppearanceSettings, backgroundType: 'image' })}
-                                    className="gap-2"
-                                >
-                                    <ImageIcon className="w-4 h-4" /> Image
-                                </Button>
-                                <Button
-                                    variant={tempAppearanceSettings.backgroundType === 'video' ? 'default' : 'outline'}
-                                    onClick={() => setTempAppearanceSettings({ ...tempAppearanceSettings, backgroundType: 'video' })}
-                                    className="gap-2"
-                                >
-                                    <Video className="w-4 h-4" /> Video
-                                </Button>
-                            </div>
-
-                            {/* Gradient Colors */}
-                            {tempAppearanceSettings.backgroundType === 'gradient' && (
-                                <div className="space-y-2 animate-fade-in">
-                                    <label className="text-sm font-medium">Gradient Colors</label>
-                                    <div className="flex gap-4">
-                                        <div className="flex-1 space-y-1">
-                                            <label className="text-xs text-muted-foreground">Start Color</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="color"
-                                                    value={tempAppearanceSettings.gradientColors[0]}
-                                                    onChange={(e) => setTempAppearanceSettings({
-                                                        ...tempAppearanceSettings,
-                                                        gradientColors: [e.target.value, tempAppearanceSettings.gradientColors[1]]
-                                                    })}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <Input
-                                                    value={tempAppearanceSettings.gradientColors[0]}
-                                                    onChange={(e) => setTempAppearanceSettings({
-                                                        ...tempAppearanceSettings,
-                                                        gradientColors: [e.target.value, tempAppearanceSettings.gradientColors[1]]
-                                                    })}
-                                                    className="flex-1 font-mono uppercase"
-                                                    maxLength={7}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 space-y-1">
-                                            <label className="text-xs text-muted-foreground">End Color</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="color"
-                                                    value={tempAppearanceSettings.gradientColors[1]}
-                                                    onChange={(e) => setTempAppearanceSettings({
-                                                        ...tempAppearanceSettings,
-                                                        gradientColors: [tempAppearanceSettings.gradientColors[0], e.target.value]
-                                                    })}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <Input
-                                                    value={tempAppearanceSettings.gradientColors[1]}
-                                                    onChange={(e) => setTempAppearanceSettings({
-                                                        ...tempAppearanceSettings,
-                                                        gradientColors: [tempAppearanceSettings.gradientColors[0], e.target.value]
-                                                    })}
-                                                    className="flex-1 font-mono uppercase"
-                                                    maxLength={7}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Media URL */}
-                            {(tempAppearanceSettings.backgroundType === 'image' || tempAppearanceSettings.backgroundType === 'video') && (
-                                <div className="space-y-2 animate-fade-in">
-                                    <label className="text-sm font-medium flex items-center gap-2">
-                                        <Link className="w-4 h-4" /> Media URL (Direct Link)
-                                    </label>
-                                    <Input
-                                        value={tempAppearanceSettings.mediaUrl}
-                                        onChange={(e) => setTempAppearanceSettings({ ...tempAppearanceSettings, mediaUrl: e.target.value })}
-                                        placeholder={`https://example.com/media.${tempAppearanceSettings.backgroundType === 'image' ? 'jpg' : 'mp4'}`}
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        Paste a direct link to an image or .mp4 video file.
-                                    </p>
-
-                                    <div className="space-y-2 pt-2">
-                                        <div className="flex justify-between">
-                                            <label className="text-sm font-medium">Overlay Opacity</label>
-                                            <span className="text-xs text-muted-foreground">{Math.round(tempAppearanceSettings.bgOpacity * 100)}%</span>
-                                        </div>
-                                        <Slider
-                                            value={[tempAppearanceSettings.bgOpacity]}
-                                            max={0.9}
-                                            step={0.05}
-                                            onValueChange={(val) => setTempAppearanceSettings({ ...tempAppearanceSettings, bgOpacity: val[0] })}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Preset Timer Options */}
-                    <div className="space-y-4 pt-4 border-t border-border">
-                        <h2 className="text-lg font-semibold text-foreground">
-                            {t('settings.timerPresets')}
-                        </h2>
-                        <p className="text-xs text-muted-foreground">
-                            {t('settings.presetsDesc')}
-                        </p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setTempSettings({
-                                        ...tempSettings,
-                                        pomodoroTime: 15,
-                                        shortBreakTime: 3,
-                                    });
-                                }}
-                                className="flex flex-col h-auto py-3 items-start"
-                            >
-                                <span className="font-semibold">{t('settings.preset.short')}</span>
-                                <span className="text-xs text-muted-foreground">15min + 3min</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setTempSettings({
-                                        ...tempSettings,
-                                        pomodoroTime: 25,
-                                        shortBreakTime: 5,
-                                    });
-                                }}
-                                className="flex flex-col h-auto py-3 items-start"
-                            >
-                                <span className="font-semibold">{t('settings.preset.standard')} ⭐</span>
-                                <span className="text-xs text-muted-foreground">25min + 5min</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setTempSettings({
-                                        ...tempSettings,
-                                        pomodoroTime: 35,
-                                        shortBreakTime: 7,
-                                    });
-                                }}
-                                className="flex flex-col h-auto py-3 items-start"
-                            >
-                                <span className="font-semibold">{t('settings.preset.medium')}</span>
-                                <span className="text-xs text-muted-foreground">35min + 7min</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setTempSettings({
-                                        ...tempSettings,
-                                        pomodoroTime: 50,
-                                        shortBreakTime: 10,
-                                    });
-                                }}
-                                className="flex flex-col h-auto py-3 items-start"
-                            >
-                                <span className="font-semibold">{t('settings.preset.long')}</span>
-                                <span className="text-xs text-muted-foreground">50min + 10min</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setTempSettings({
-                                        ...tempSettings,
-                                        pomodoroTime: 52,
-                                        shortBreakTime: 17,
-                                    });
-                                }}
-                                className="flex flex-col h-auto py-3 items-start col-span-2"
-                            >
-                                <span className="font-semibold flex items-center gap-1">
-                                    {t('settings.preset.research')}
-                                    <span className="text-xs">📊</span>
-                                </span>
-                                <span className="text-xs text-muted-foreground">52min + 17min ({t('settings.preset.researchDesc')})</span>
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Appearance Settings */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between border-b border-border pb-2">
-                            <h2 className="text-lg font-semibold text-foreground">
-                                {t('settings.appearance')}
-                            </h2>
-                        </div>
-
-                        <div className="space-y-4">
-                            {/* Background Type Selection */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-foreground">
-                                    Background Type
-                                </label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <Button
-                                        variant={tempAppearanceSettings.backgroundType === 'gradient' ? 'default' : 'outline'}
-                                        onClick={() => setTempAppearanceSettings({ ...tempAppearanceSettings, backgroundType: 'gradient' })}
-                                        className="gap-2"
-                                    >
-                                        <Palette className="w-4 h-4" />
-                                        Gradient
-                                    </Button>
-                                    <Button
-                                        variant={tempAppearanceSettings.backgroundType === 'image' ? 'default' : 'outline'}
-                                        onClick={() => setTempAppearanceSettings({ ...tempAppearanceSettings, backgroundType: 'image' })}
-                                        className="gap-2"
-                                    >
-                                        <ImageIcon className="w-4 h-4" />
-                                        Image
-                                    </Button>
-                                    <Button
-                                        variant={tempAppearanceSettings.backgroundType === 'video' ? 'default' : 'outline'}
-                                        onClick={() => setTempAppearanceSettings({ ...tempAppearanceSettings, backgroundType: 'video' })}
-                                        className="gap-2"
-                                    >
-                                        <Video className="w-4 h-4" />
-                                        Video
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Gradient Colors */}
-                            {tempAppearanceSettings.backgroundType === 'gradient' && (
-                                <div className="space-y-2 animate-fade-in">
-                                    <label className="text-sm font-medium text-foreground">
-                                        Gradient Colors
-                                    </label>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs text-muted-foreground block mb-1">Start Color</label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="color"
-                                                    value={tempAppearanceSettings.gradientColors[0]}
-                                                    onChange={(e) => {
-                                                        const newColors = [...tempAppearanceSettings.gradientColors] as [string, string];
-                                                        newColors[0] = e.target.value;
-                                                        setTempAppearanceSettings({ ...tempAppearanceSettings, gradientColors: newColors });
-                                                    }}
-                                                    className="w-10 h-10 rounded cursor-pointer border-0 p-0"
-                                                />
-                                                <Input
-                                                    value={tempAppearanceSettings.gradientColors[0]}
-                                                    onChange={(e) => {
-                                                        const newColors = [...tempAppearanceSettings.gradientColors] as [string, string];
-                                                        newColors[0] = e.target.value;
-                                                        setTempAppearanceSettings({ ...tempAppearanceSettings, gradientColors: newColors });
-                                                    }}
-                                                    className="uppercase font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-muted-foreground block mb-1">End Color</label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="color"
-                                                    value={tempAppearanceSettings.gradientColors[1]}
-                                                    onChange={(e) => {
-                                                        const newColors = [...tempAppearanceSettings.gradientColors] as [string, string];
-                                                        newColors[1] = e.target.value;
-                                                        setTempAppearanceSettings({ ...tempAppearanceSettings, gradientColors: newColors });
-                                                    }}
-                                                    className="w-10 h-10 rounded cursor-pointer border-0 p-0"
-                                                />
-                                                <Input
-                                                    value={tempAppearanceSettings.gradientColors[1]}
-                                                    onChange={(e) => {
-                                                        const newColors = [...tempAppearanceSettings.gradientColors] as [string, string];
-                                                        newColors[1] = e.target.value;
-                                                        setTempAppearanceSettings({ ...tempAppearanceSettings, gradientColors: newColors });
-                                                    }}
-                                                    className="uppercase font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Media URL Input */}
-                            {(tempAppearanceSettings.backgroundType === 'image' || tempAppearanceSettings.backgroundType === 'video') && (
-                                <div className="space-y-2 animate-fade-in">
-                                    <label className="text-sm font-medium text-foreground">
-                                        Media URL
-                                    </label>
+                                {/* Language */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">{t('settings.language')}</label>
                                     <div className="flex gap-2">
-                                        <div className="relative flex-1">
-                                            <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                            <Input
-                                                value={tempAppearanceSettings.mediaUrl}
-                                                onChange={(e) => setTempAppearanceSettings({ ...tempAppearanceSettings, mediaUrl: e.target.value })}
-                                                placeholder={tempAppearanceSettings.backgroundType === 'image' ? "https://example.com/image.jpg" : "https://example.com/video.mp4"}
-                                                className="pl-9"
+                                        <Button
+                                            variant={language === 'en' ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => changeLanguage('en')}
+                                        >
+                                            English
+                                        </Button>
+                                        <Button
+                                            variant={language === 'ja' ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => changeLanguage('ja')}
+                                        >
+                                            日本語
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Compact Mode */}
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <label className="text-sm font-medium">{t('settings.compactMode')}</label>
+                                        <p className="text-xs text-muted-foreground">{t('settings.compactModeDesc')}</p>
+                                    </div>
+                                    <Button
+                                        variant={appearanceSettings.isCompact ? "default" : "outline"}
+                                        onClick={toggleCompactMode}
+                                        className="gap-2"
+                                    >
+                                        {appearanceSettings.isCompact ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                                        {appearanceSettings.isCompact ? t('settings.compactActive') : t('settings.compactEnable')}
+                                    </Button>
+                                </div>
+
+                                {/* Always on Top (Standard) */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">{t('settings.alwaysOnTop')}</label>
+                                    <Switch
+                                        checked={tempPomoSettings.alwaysOnTop}
+                                        onCheckedChange={(checked) => {
+                                            setTempPomoSettings({ ...tempPomoSettings, alwaysOnTop: checked });
+                                            window.electronAPI?.setAlwaysOnTop(checked);
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Data Features */}
+                                <div className="space-y-4 pt-4 border-t border-border/50">
+                                    <h3 className="text-lg font-medium">{t('settings.section.data')}</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Button
+                                            variant="outline"
+                                            className="w-full gap-2"
+                                            onClick={() => {
+                                                const data = {
+                                                    pomodoroSettings: tempPomoSettings,
+                                                    soundSettings: tempSoundSettings,
+                                                    appearanceSettings: tempAppearanceSettings,
+                                                    timestamp: new Date().toISOString()
+                                                };
+                                                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = `pomotaro-backup-${new Date().toISOString().split('T')[0]}.json`;
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                document.body.removeChild(a);
+                                            }}
+                                        >
+                                            <Download className="w-4 h-4" /> {t('settings.export')}
+                                        </Button>
+                                        <Button variant="outline" className="w-full gap-2 relative">
+                                            <Upload className="w-4 h-4" /> {t('settings.import')}
+                                            <input
+                                                type="file"
+                                                accept=".json"
+                                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        const reader = new FileReader();
+                                                        reader.onload = (event) => {
+                                                            try {
+                                                                const data = JSON.parse(event.target?.result as string);
+                                                                if (data.pomodoroSettings) setTempPomoSettings(data.pomodoroSettings);
+                                                                if (data.soundSettings) setTempSoundSettings(data.soundSettings);
+                                                                if (data.appearanceSettings) {
+                                                                    setTempAppearanceSettings(data.appearanceSettings);
+                                                                    updateAppearance(data.appearanceSettings); // Instant preview on import
+                                                                }
+                                                                alert(t('settings.importSuccess'));
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                                alert(t('settings.importError'));
+                                                            }
+                                                        };
+                                                        reader.readAsText(file);
+                                                    }
+                                                }}
+                                            />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </TabsContent>
+
+                        {/* Timer Tab */}
+                        <TabsContent value="timer" className="space-y-6 animate-fade-in">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-foreground">{t('settings.pomodoro')}</label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={tempPomoSettings.pomodoroTime}
+                                            onChange={(e) => setTempPomoSettings({ ...tempPomoSettings, pomodoroTime: Number(e.target.value) })}
+                                            className="font-mono text-lg"
+                                        />
+                                        <span className="text-sm text-muted-foreground">{t('common.minutes')}</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-foreground">{t('settings.shortBreak')}</label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={tempPomoSettings.shortBreakTime}
+                                            onChange={(e) => setTempPomoSettings({ ...tempPomoSettings, shortBreakTime: Number(e.target.value) })}
+                                            className="font-mono text-lg"
+                                        />
+                                        <span className="text-sm text-muted-foreground">{t('common.minutes')}</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-foreground">{t('settings.longBreak')}</label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={tempPomoSettings.longBreakTime}
+                                            onChange={(e) => setTempPomoSettings({ ...tempPomoSettings, longBreakTime: Number(e.target.value) })}
+                                            className="font-mono text-lg"
+                                        />
+                                        <span className="text-sm text-muted-foreground">{t('common.minutes')}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 pt-4 border-t border-border/50">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">{t('settings.autoStartBreaks')}</label>
+                                    <Switch
+                                        checked={tempPomoSettings.autoStartBreaks}
+                                        onCheckedChange={(checked) => setTempPomoSettings({ ...tempPomoSettings, autoStartBreaks: checked })}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">{t('settings.autoStartPomodoros')}</label>
+                                    <Switch
+                                        checked={tempPomoSettings.autoStartPomodoros}
+                                        onCheckedChange={(checked) => setTempPomoSettings({ ...tempPomoSettings, autoStartPomodoros: checked })}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">{t('settings.showEstimatedFinishTime')}</label>
+                                    <Switch
+                                        checked={tempPomoSettings.showEstimatedFinishTime}
+                                        onCheckedChange={(checked) => setTempPomoSettings({ ...tempPomoSettings, showEstimatedFinishTime: checked })}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">{t('settings.showTaskInput')}</label>
+                                    <Switch
+                                        checked={tempPomoSettings.showTaskInput}
+                                        onCheckedChange={(checked) => setTempPomoSettings({ ...tempPomoSettings, showTaskInput: checked })}
+                                    />
+                                </div>
+                            </div>
+                        </TabsContent>
+
+                        {/* Appearance Tab */}
+                        <TabsContent value="appearance" className="space-y-6 animate-fade-in">
+                            <div className="space-y-6">
+                                {/* Theme Presets */}
+                                <div className="space-y-3">
+                                    <label className="text-sm font-medium text-foreground">{t('settings.themeColor')}</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        {(Object.keys(THEME_PRESETS) as PresetTheme[]).map((themeKey) => {
+                                            if (themeKey === 'custom') return null;
+                                            const preset = THEME_PRESETS[themeKey];
+                                            const isSelected = tempAppearanceSettings.backgroundTheme === themeKey;
+
+                                            return (
+                                                <button
+                                                    key={themeKey}
+                                                    onClick={() => {
+                                                        const newSettings: AppearanceSettings = {
+                                                            ...tempAppearanceSettings,
+                                                            backgroundType: 'gradient',
+                                                            backgroundTheme: themeKey,
+                                                            gradientColors: preset.colors
+                                                        };
+                                                        setTempAppearanceSettings(newSettings);
+                                                        updateAppearance(newSettings); // Instant Preview
+                                                    }}
+                                                    className={`
+                                                        relative flex items-center gap-3 p-3 rounded-xl border transition-all overflow-hidden
+                                                        ${isSelected
+                                                            ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+                                                            : 'border-border hover:border-primary/50 hover:bg-muted/50'}
+                                                    `}
+                                                >
+                                                    <div
+                                                        className="w-8 h-8 rounded-full shadow-sm"
+                                                        style={{ background: `linear-gradient(135deg, ${preset.colors[0]}, ${preset.colors[1]})` }}
+                                                    />
+                                                    <span className="text-sm font-medium">{t(`settings.theme.${themeKey}`)}</span>
+                                                </button>
+                                            )
+                                        })}
+
+                                        {/* Custom Option */}
+                                        <button
+                                            onClick={() => {
+                                                const newSettings: AppearanceSettings = {
+                                                    ...tempAppearanceSettings,
+                                                    backgroundType: 'gradient',
+                                                    backgroundTheme: 'custom'
+                                                };
+                                                setTempAppearanceSettings(newSettings);
+                                                updateAppearance(newSettings); // Instant Preview
+                                            }}
+                                            className={`
+                                                relative flex items-center gap-3 p-3 rounded-xl border transition-all overflow-hidden
+                                                ${tempAppearanceSettings.backgroundTheme === 'custom'
+                                                    ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+                                                    : 'border-border hover:border-primary/50 hover:bg-muted/50'}
+                                            `}
+                                        >
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-200 to-gray-400 shadow-sm flex items-center justify-center">
+                                                <Palette className="w-4 h-4 text-gray-600" />
+                                            </div>
+                                            <span className="text-sm font-medium">{t('settings.theme.custom')}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Detailed Gradient Controls (Only if Custom) */}
+                                {tempAppearanceSettings.backgroundTheme === 'custom' && tempAppearanceSettings.backgroundType === 'gradient' && (
+                                    <div className="space-y-3 pt-4 border-t border-border/50 animate-fade-in">
+                                        <label className="text-sm font-medium text-foreground">{t('settings.customGradient')}</label>
+                                        <div className="flex gap-4">
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="color"
+                                                    value={tempAppearanceSettings.gradientColors[0]}
+                                                    onChange={(e) => {
+                                                        const newColors = [...tempAppearanceSettings.gradientColors] as [string, string];
+                                                        newColors[0] = e.target.value;
+                                                        const newSettings = { ...tempAppearanceSettings, gradientColors: newColors };
+                                                        setTempAppearanceSettings(newSettings);
+                                                        updateAppearance(newSettings); // Instant Preview
+                                                    }}
+                                                    className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0"
+                                                />
+                                                <span className="text-xs font-mono">{tempAppearanceSettings.gradientColors[0]}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="color"
+                                                    value={tempAppearanceSettings.gradientColors[1]}
+                                                    onChange={(e) => {
+                                                        const newColors = [...tempAppearanceSettings.gradientColors] as [string, string];
+                                                        newColors[1] = e.target.value;
+                                                        const newSettings = { ...tempAppearanceSettings, gradientColors: newColors };
+                                                        setTempAppearanceSettings(newSettings);
+                                                        updateAppearance(newSettings); // Instant Preview
+                                                    }}
+                                                    className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0"
+                                                />
+                                                <span className="text-xs font-mono">{tempAppearanceSettings.gradientColors[1]}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Background Type Toggle (Image/Video) */}
+                                <div className="space-y-3 pt-6 border-t border-border/50">
+                                    <label className="text-sm font-medium text-foreground">{t('settings.section.media')}</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <Button
+                                            variant={tempAppearanceSettings.backgroundType === 'gradient' ? 'default' : 'outline'}
+                                            onClick={() => {
+                                                const newSettings: AppearanceSettings = { ...tempAppearanceSettings, backgroundType: 'gradient' };
+                                                setTempAppearanceSettings(newSettings);
+                                                updateAppearance(newSettings);
+                                            }}
+                                            className="gap-2"
+                                        >
+                                            <Palette className="w-4 h-4" /> {t('settings.bg.gradient')}
+                                        </Button>
+                                        <Button
+                                            variant={tempAppearanceSettings.backgroundType === 'image' ? 'default' : 'outline'}
+                                            onClick={() => {
+                                                const newSettings: AppearanceSettings = { ...tempAppearanceSettings, backgroundType: 'image' };
+                                                setTempAppearanceSettings(newSettings);
+                                                updateAppearance(newSettings);
+                                            }}
+                                            className="gap-2"
+                                        >
+                                            <ImageIcon className="w-4 h-4" /> {t('settings.bg.image')}
+                                        </Button>
+                                        <Button
+                                            variant={tempAppearanceSettings.backgroundType === 'video' ? 'default' : 'outline'}
+                                            onClick={() => {
+                                                const newSettings: AppearanceSettings = { ...tempAppearanceSettings, backgroundType: 'video' };
+                                                setTempAppearanceSettings(newSettings);
+                                                updateAppearance(newSettings);
+                                            }}
+                                            className="gap-2"
+                                        >
+                                            <Video className="w-4 h-4" /> {t('settings.bg.video')}
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Media URL & Opacity */}
+                                {(tempAppearanceSettings.backgroundType === 'image' || tempAppearanceSettings.backgroundType === 'video') && (
+                                    <div className="space-y-4 animate-fade-in">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">{t('settings.mediaUrl')}</label>
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                    <Input
+                                                        value={tempAppearanceSettings.mediaUrl}
+                                                        onChange={(e) => {
+                                                            const newSettings = { ...tempAppearanceSettings, mediaUrl: e.target.value };
+                                                            setTempAppearanceSettings(newSettings);
+                                                            updateAppearance(newSettings); // Instant Preview
+                                                        }}
+                                                        placeholder="https://example.com/image.jpg"
+                                                        className="pl-9"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between">
+                                                <label className="text-sm font-medium">{t('settings.overlayOpacity')}</label>
+                                                <span className="text-sm text-muted-foreground">{Math.round(tempAppearanceSettings.bgOpacity * 100)}%</span>
+                                            </div>
+                                            <Slider
+                                                value={[tempAppearanceSettings.bgOpacity]}
+                                                onValueChange={(val) => {
+                                                    const newSettings = { ...tempAppearanceSettings, bgOpacity: val[0] };
+                                                    setTempAppearanceSettings(newSettings);
+                                                    updateAppearance(newSettings); // Instant Preview
+                                                }}
+                                                max={1}
+                                                step={0.1}
                                             />
                                         </div>
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Enter a direct URL to an {tempAppearanceSettings.backgroundType} file.
-                                    </p>
-                                </div>
-                            )}
+                                )}
+                            </div>
+                        </TabsContent>
 
-                            {/* Overlay Opacity */}
-                            {(tempAppearanceSettings.backgroundType === 'image' || tempAppearanceSettings.backgroundType === 'video') && (
-                                <div className="space-y-2 animate-fade-in">
-                                    <div className="flex justify-between items-center">
-                                        <label className="text-sm font-medium text-foreground">Overlay Opacity</label>
-                                        <span className="text-sm text-muted-foreground">{Math.round(tempAppearanceSettings.bgOpacity * 100)}%</span>
+                        {/* Sound Tab */}
+                        <TabsContent value="sound" className="space-y-6 animate-fade-in">
+                            <div className="space-y-6">
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium">{t('settings.soundVolume')}</label>
+                                        <span className="text-sm text-muted-foreground">{Math.round(tempSoundSettings.volume * 100)}%</span>
                                     </div>
                                     <Slider
-                                        value={[tempAppearanceSettings.bgOpacity]}
-                                        max={0.9}
-                                        step={0.05}
-                                        onValueChange={(val) => setTempAppearanceSettings({ ...tempAppearanceSettings, bgOpacity: val[0] })}
-                                        className="py-4"
+                                        value={[tempSoundSettings.volume]}
+                                        onValueChange={(val) => setTempSoundSettings({ ...tempSoundSettings, volume: val[0] })}
+                                        max={1}
+                                        step={0.01}
                                     />
-                                    <p className="text-xs text-muted-foreground">
-                                        Adjust transparency to make text readable.
-                                    </p>
                                 </div>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Timer Settings */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between border-b border-border pb-2">
-                            <h2 className="text-lg font-semibold text-foreground">
-                                Timer Settings
-                            </h2>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-xs sm:text-sm font-medium text-foreground block mb-2">
-                                    {t('settings.pomodoro')}
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="180"
-                                    value={tempSettings.pomodoroTime}
-                                    onChange={(e) =>
-                                        setTempSettings({
-                                            ...tempSettings,
-                                            pomodoroTime: Math.max(1, Math.min(180, parseInt(e.target.value) || 25)),
-                                        })
-                                    }
-                                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs sm:text-sm font-medium text-foreground block mb-2">
-                                    {t('settings.shortBreak')}
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="30"
-                                    value={tempSettings.shortBreakTime}
-                                    onChange={(e) =>
-                                        setTempSettings({
-                                            ...tempSettings,
-                                            shortBreakTime: parseInt(e.target.value),
-                                        })
-                                    }
-                                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs sm:text-sm font-medium text-foreground block mb-2">
-                                    {t('settings.longBreak')} (min)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="60"
-                                    value={tempSettings.longBreakTime}
-                                    onChange={(e) =>
-                                        setTempSettings({
-                                            ...tempSettings,
-                                            longBreakTime: parseInt(e.target.value),
-                                        })
-                                    }
-                                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs sm:text-sm font-medium text-foreground block mb-2">
-                                    {t('settings.longBreakInterval')}
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="10"
-                                    value={tempSettings.longBreakInterval}
-                                    onChange={(e) =>
-                                        setTempSettings({
-                                            ...tempSettings,
-                                            longBreakInterval: parseInt(e.target.value),
-                                        })
-                                    }
-                                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-3 pt-4 border-t border-border">
-                            <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={tempSettings.autoStartPomodoros}
-                                    onChange={(e) =>
-                                        setTempSettings({
-                                            ...tempSettings,
-                                            autoStartPomodoros: e.target.checked,
-                                        })
-                                    }
-                                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
-                                />
-                                <span className="text-sm font-medium text-foreground">{t('settings.autoStartPomodoros')}</span>
-                            </label>
-
-                            <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={tempSettings.autoStartBreaks}
-                                    onChange={(e) =>
-                                        setTempSettings({
-                                            ...tempSettings,
-                                            autoStartBreaks: e.target.checked,
-                                        })
-                                    }
-                                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
-                                />
-                                <span className="text-sm font-medium text-foreground">{t('settings.autoStartBreaks')}</span>
-                            </label>
-                        </div>
-
-                        {/* Category Option */}
-                        <div className="pt-4 border-t border-border">
-                            <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={tempSettings.alwaysAskCategory}
-                                    onChange={(e) =>
-                                        setTempSettings({
-                                            ...tempSettings,
-                                            alwaysAskCategory: e.target.checked,
-                                        })
-                                    }
-                                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
-                                />
-                                <div>
-                                    <span className="text-sm font-medium text-foreground">
-                                        {t('settings.alwaysAskCategory')}
-                                    </span>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {t('settings.alwaysAskCategoryDesc')}
-                                    </p>
+                                <div className="space-y-4 pt-4 border-t border-border/50">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium">{t('settings.whiteNoiseVolume')}</label>
+                                        <span className="text-sm text-muted-foreground">{Math.round(tempSoundSettings.whiteNoiseVolume * 100)}%</span>
+                                    </div>
+                                    <Slider
+                                        value={[tempSoundSettings.whiteNoiseVolume]}
+                                        onValueChange={(val) => setTempSoundSettings({ ...tempSoundSettings, whiteNoiseVolume: val[0] })}
+                                        max={1}
+                                        step={0.01}
+                                    />
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {(['white', 'pink', 'brown'] as const).map(type => (
+                                            <Button
+                                                key={type}
+                                                variant={tempSoundSettings.noiseType === type ? 'default' : 'outline'}
+                                                onClick={() => setTempSoundSettings({ ...tempSoundSettings, noiseType: type })}
+                                                size="sm"
+                                            >
+                                                {t(`settings.noise.${type}`)}
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </label>
 
-                            <div className="pt-4 border-t border-border">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={tempSettings.showEstimatedFinishTime}
-                                        onChange={(e) =>
-                                            setTempSettings({
-                                                ...tempSettings,
-                                                showEstimatedFinishTime: e.target.checked,
-                                            })
-                                        }
-                                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
-                                    />
-                                    <span className="text-sm font-medium text-foreground">
-                                        {t('settings.showEstimatedFinishTime')}
-                                    </span>
-                                </label>
-                            </div>
-                            <div className="pt-4 border-t border-border">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={tempSettings.showTaskInput}
-                                        onChange={(e) =>
-                                            setTempSettings({
-                                                ...tempSettings,
-                                                showTaskInput: e.target.checked,
-                                            })
-                                        }
-                                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
-                                    />
-                                    <span className="text-sm font-medium text-foreground">
-                                        タスク名と予想ポモドーロ数を表示
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Desktop Features */}
-                    <div className="space-y-4 pt-4 border-t border-border">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={tempSettings.alwaysOnTop || false}
-                                onChange={(e) => {
-                                    setTempSettings({
-                                        ...tempSettings,
-                                        alwaysOnTop: e.target.checked,
-                                    });
-                                    if (window.electronAPI) {
-                                        window.electronAPI.setAlwaysOnTop(e.target.checked);
-                                    }
-                                }}
-                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
-                            />
-                            <span className="text-sm font-medium text-foreground">
-                                最前面に固定 (Always on Top)
-                            </span>
-                        </label>
-                    </div>
-
-                    {/* Sound Settings */}
-                    <div className="space-y-4 pt-4 border-t border-border">
-                        <h2 className="text-lg font-semibold text-foreground">{t('settings.sound')}</h2>
-
-                        {/* Volume Slider */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <label className="text-sm font-medium text-foreground">{t('settings.volume')}</label>
-                                <span className="text-sm text-muted-foreground">{Math.round(tempSoundSettings.volume * 100)}%</span>
-                            </div>
-                            <Slider
-                                defaultValue={[tempSoundSettings.volume]}
-                                value={[tempSoundSettings.volume]}
-                                max={1}
-                                step={0.01}
-                                onValueChange={(val) => setTempSoundSettings({ ...tempSoundSettings, volume: val[0] })}
-                                className="py-4"
-                            />
-                        </div>
-
-                        {/* White Noise Volume Slider */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <label className="text-sm font-medium text-foreground">{t('settings.whiteNoiseVolume')}</label>
-                                <span className="text-sm text-muted-foreground">{Math.round(tempSoundSettings.whiteNoiseVolume * 100)}%</span>
-                            </div>
-
-                            <Slider
-                                defaultValue={[tempSoundSettings.whiteNoiseVolume]}
-                                value={[tempSoundSettings.whiteNoiseVolume]}
-                                max={1}
-                                step={0.01}
-                                onValueChange={(val) => setTempSoundSettings({ ...tempSoundSettings, whiteNoiseVolume: val[0] })}
-                                className="py-4"
-                            />
-
-                        </div>
-
-                        {/* Noise Type Selection */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">
-                                ノイズタイプ
-                            </label>
-                            <div className="grid grid-cols-3 gap-2">
-                                <Button
-                                    variant={tempSoundSettings.noiseType === 'white' ? 'default' : 'outline'}
-                                    onClick={() => setTempSoundSettings({ ...tempSoundSettings, noiseType: 'white' })}
-                                    className="text-xs"
-                                >
-                                    ホワイト
-                                </Button>
-                                <Button
-                                    variant={tempSoundSettings.noiseType === 'pink' ? 'default' : 'outline'}
-                                    onClick={() => setTempSoundSettings({ ...tempSoundSettings, noiseType: 'pink' })}
-                                    className="text-xs"
-                                >
-                                    ピンク
-                                </Button>
-                                <Button
-                                    variant={tempSoundSettings.noiseType === 'brown' ? 'default' : 'outline'}
-                                    onClick={() => setTempSoundSettings({ ...tempSoundSettings, noiseType: 'brown' })}
-                                    className="text-xs"
-                                >
-                                    ブラウン
-                                </Button>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                ブラウンノイズ: 深い音で最も集中しやすい（推奨）
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Data Management */}
-                    <div className="space-y-4 pt-4 border-t border-border">
-                        <h2 className="text-lg font-semibold text-foreground">{t('settings.data')}</h2>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg bg-secondary/20 space-y-3">
-                                <h3 className="font-medium">{t('settings.export')}</h3>
-                                <p className="text-xs text-muted-foreground">{t('settings.exportDesc')}</p>
-                                <Button
-                                    onClick={() => {
-                                        try {
-                                            const getParsedItem = (key: string) => {
-                                                const item = localStorage.getItem(key);
-                                                return item ? JSON.parse(item) : null;
-                                            };
-
-                                            const data = {
-                                                pomodoroSettings: getParsedItem('pomodoroSettings'),
-                                                // sessionsCompleted: getParsedItem('sessionsCompleted'), // Not persisted
-                                                pomodoroSessions: getParsedItem('pomotaro-sessions'), // Correct key
-                                                tasks: getParsedItem('pomodoroTasks'), // Correct key
-                                                studyCategories: getParsedItem('studyCategories'),
-                                                'app-language': localStorage.getItem('app-language'), // String value
-                                                soundSettings: getParsedItem('soundSettings'),
-                                                // whiteNoiseVolume: getParsedItem('whiteNoiseVolume'), // Included in soundSettings
-                                                exams: getParsedItem('examDates'), // Correct key
-                                                appearanceSettings: getParsedItem('appearanceSettings'),
-                                                theme: localStorage.getItem('theme'),
-                                            };
-
-                                            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                                            const url = URL.createObjectURL(blob);
-                                            const a = document.createElement('a');
-                                            a.href = url;
-                                            a.download = `pomotaro-backup-${new Date().toISOString().split('T')[0]}.json`;
-                                            document.body.appendChild(a);
-                                            a.click();
-                                            document.body.removeChild(a);
-                                            URL.revokeObjectURL(url);
-                                        } catch (error) {
-                                            console.error('Export failed:', error);
-                                            alert(t('settings.importError') || 'Export failed'); // Fallback message
-                                        }
-                                    }}
-                                    variant="outline"
-                                    className="w-full"
-                                >
-                                    {t('settings.export')}
-                                </Button>
-                            </div>
-
-                            <div className="p-4 rounded-lg bg-secondary/20 space-y-3">
-                                <h3 className="font-medium">{t('settings.import')}</h3>
-                                <p className="text-xs text-muted-foreground">{t('settings.importDesc')}</p>
-                                <div className="relative">
-                                    <Button variant="outline" className="w-full relative cursor-pointer">
-                                        <input
-                                            type="file"
-                                            accept=".json"
-                                            className="absolute inset-0 opacity-0 cursor-pointer"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) {
-                                                    const reader = new FileReader();
-                                                    reader.onload = (event) => {
-                                                        try {
-                                                            const data = JSON.parse(event.target?.result as string);
-
-                                                            // Mapping for import compatibility
-                                                            const keyMapping: Record<string, string> = {
-                                                                pomodoroSettings: 'pomodoroSettings',
-                                                                pomodoroSessions: 'pomotaro-sessions',
-                                                                tasks: 'pomodoroTasks',
-                                                                studyCategories: 'studyCategories',
-                                                                'app-language': 'app-language',
-                                                                soundSettings: 'soundSettings',
-                                                                exams: 'examDates',
-                                                                appearanceSettings: 'appearanceSettings',
-                                                                theme: 'theme'
-                                                            };
-
-                                                            Object.entries(data).forEach(([key, value]) => {
-                                                                const storageKey = keyMapping[key] || key;
-                                                                if (value !== null && value !== undefined) {
-                                                                    if (typeof value === 'object') {
-                                                                        localStorage.setItem(storageKey, JSON.stringify(value));
-                                                                    } else {
-                                                                        localStorage.setItem(storageKey, String(value));
-                                                                    }
-                                                                }
-                                                            });
-
-                                                            alert(t('settings.importSuccess'));
-                                                            window.location.reload();
-                                                        } catch (error) {
-                                                            console.error('Import failed:', error);
-                                                            alert(t('settings.importError'));
-                                                        }
-                                                    };
-                                                    reader.readAsText(file);
-                                                }
-                                            }}
+                                <div className="space-y-4 pt-4 border-t border-border/50">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium">{t('settings.tickSound')}</label>
+                                        <Switch
+                                            checked={tempSoundSettings.playTickSound}
+                                            onCheckedChange={(checked) => setTempSoundSettings({ ...tempSoundSettings, playTickSound: checked })}
                                         />
-                                        {t('settings.import')}
-                                    </Button>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium">{t('settings.notificationSound')}</label>
+                                        <Switch
+                                            checked={tempSoundSettings.playNotificationSound}
+                                            onCheckedChange={(checked) => setTempSoundSettings({ ...tempSoundSettings, playNotificationSound: checked })}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </TabsContent>
+                    </Tabs>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-3 pt-4 border-t border-border">
-                        <Button
-                            onClick={handleSave}
-                            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-                        >
-                            <Check className="w-4 h-4 mr-2" />
+                    {/* Footer Actions */}
+                    <div className="flex justify-end pt-6 mt-6 border-t border-border/50">
+                        <Button onClick={handleSave} size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all">
+                            <Save className="w-5 h-5" />
                             {t('settings.save')}
-                        </Button>
-                        <Button
-                            onClick={handleCancel}
-                            variant="outline"
-                            className="flex-1 border-2 border-border text-foreground hover:border-primary hover:text-primary"
-                        >
-                            <X className="w-4 h-4 mr-2" />
-                            {t('settings.cancel')}
                         </Button>
                     </div>
                 </Card>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 }

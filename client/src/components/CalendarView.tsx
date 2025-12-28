@@ -100,18 +100,17 @@ export function CalendarView() {
         </div>
       </div>
 
-      <Card className="p-4 bg-card shadow-warm">
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">
+      <Card className="p-6 bg-card/30 border-2 shadow-none rounded-xl">
+        <div className="grid grid-cols-7 gap-2 sm:gap-3">
           {/* Week day headers */}
           {weekDays.map((day) => (
             <div
               key={day}
-              className="text-center text-xs sm:text-sm font-semibold text-muted-foreground py-2"
+              className="text-center text-xs font-bold text-muted-foreground/70 py-2 uppercase tracking-wider"
             >
               {day}
             </div>
           ))}
-
 
           {/* Calendar days */}
           {calendarDays.map((day, index) => {
@@ -127,17 +126,16 @@ export function CalendarView() {
             const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
 
             let dominantColor: string | undefined = undefined;
-            let maxDuration = 0;
 
             if (dayStats && dayStats.sessions) {
               const categoryDurations: Record<string, number> = {};
               dayStats.sessions.forEach((session: any) => {
-                // Only count pomodoro sessions with a category
                 if (session.sessionType === 'pomodoro' && session.categoryId) {
                   categoryDurations[session.categoryId] = (categoryDurations[session.categoryId] || 0) + session.duration;
                 }
               });
 
+              let maxDuration = 0;
               let topCategoryId: string | null = null;
               Object.entries(categoryDurations).forEach(([catId, duration]) => {
                 if (duration > maxDuration) {
@@ -158,20 +156,28 @@ export function CalendarView() {
               <div
                 key={day}
                 onClick={() => handleDayClick(dateStr)}
-                className={`aspect-square p-1 sm:p-2 rounded-lg ${!dominantColor ? getIntensityColor(focusTime) : ''
-                  } ${isToday ? 'ring-2 ring-primary' : ''
-                  } cursor-pointer hover:ring-2 hover:ring-primary transition-all relative group`}
-                style={dominantColor ? { backgroundColor: dominantColor } : undefined}
+                className={`aspect-square p-1 sm:p-2 rounded-xl border-2 transition-all relative group cursor-pointer flex flex-col justify-between
+                  ${isToday ? 'ring-2 ring-primary border-primary' : 'border-transparent hover:border-primary/50'}
+                  ${dominantColor ? 'bg-card' : 'hover:bg-card/50'}
+                `}
+                style={dominantColor ? { borderColor: dominantColor, color: dominantColor } : undefined}
                 title={`${day}: ${formatTime(focusTime)}`}
               >
-                <div className="h-full flex flex-col justify-between">
-                  <div className={`text-xs sm:text-sm font-semibold ${dominantColor ? 'text-white' : 'text-foreground'}`}>
-                    {day}
-                  </div>
-                  <div className={`text-xs ${dominantColor ? 'text-white/90' : 'text-muted-foreground'}`}>
-                    {dayStats?.pomodoroCount || 0}
-                  </div>
+                {/* Background "Fill" style for intensity if no specific category, or simple highlight */}
+                {!dominantColor && focusTime > 0 && (
+                  <div className={`absolute inset-0 rounded-xl opacity-20 ${getIntensityColor(focusTime)}`} />
+                )}
+
+                <div className={`text-sm font-bold z-10 ${dominantColor ? '' : 'text-foreground'}`}>
+                  {day}
                 </div>
+
+                {focusTime > 0 && (
+                  <div className="z-10 text-[10px] font-medium text-right opacity-80">
+                    {dayStats?.pomodoroCount || 0}
+                    <span className="text-[8px] ml-0.5">🍅</span>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -179,54 +185,51 @@ export function CalendarView() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4 bg-card shadow-warm">
-          <div className="text-xs sm:text-sm text-muted-foreground">Intensity Legend</div>
-          <div className="space-y-2 mt-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-5 bg-card/30 border-2 shadow-none rounded-xl">
+          <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Activity Legend</div>
+          <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-secondary/30" />
-              <span className="text-xs text-foreground">No activity</span>
+              <div className="w-5 h-5 rounded-md border-2 border-primary/20 bg-primary/10" />
+              <span className="text-sm text-foreground">Some Focus</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-primary/20" />
-              <span className="text-xs text-foreground">Light</span>
+              <div className="w-5 h-5 rounded-md border-2 border-primary/40 bg-primary/30" />
+              <span className="text-sm text-foreground">Good Focus</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-primary/40" />
-              <span className="text-xs text-foreground">Medium</span>
+              <div className="w-5 h-5 rounded-md border-2 border-primary/60 bg-primary/50" />
+              <span className="text-sm text-foreground">High Focus</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-primary/60" />
-              <span className="text-xs text-foreground">High</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-primary/80" />
-              <span className="text-xs text-foreground">Very High</span>
+              <div className="w-5 h-5 rounded-md border-2 border-[var(--category-color)] bg-card" />
+              <span className="text-sm text-foreground">Category Color</span>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 bg-card shadow-warm">
-          <div className="text-xs sm:text-sm text-muted-foreground">Month Summary</div>
-          <div className="space-y-2 mt-3">
-            <div className="flex justify-between">
-              <span className="text-xs text-foreground">Total Focus</span>
-              <span className="text-xs font-semibold text-primary">
+        <Card className="p-5 bg-card/30 border-2 shadow-none rounded-xl">
+          <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Monthly Summary</div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-2 rounded-lg bg-card/50">
+              <span className="text-sm font-medium text-muted-foreground">Total Focus</span>
+              <span className="text-base font-bold text-primary">
                 {formatTime(
                   Object.values(monthlyStats).reduce((sum: number, day: any) => sum + day.totalFocusTime, 0)
                 )}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-foreground">Total Pomodoros</span>
-              <span className="text-xs font-semibold text-primary">
+            <div className="flex justify-between items-center p-2 rounded-lg bg-card/50">
+              <span className="text-sm font-medium text-muted-foreground">Total Pomodoros</span>
+              <span className="text-base font-bold text-primary">
                 {Object.values(monthlyStats).reduce((sum: number, day: any) => sum + day.pomodoroCount, 0)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-foreground">Active Days</span>
-              <span className="text-xs font-semibold text-primary">
+            <div className="flex justify-between items-center p-2 rounded-lg bg-card/50">
+              <span className="text-sm font-medium text-muted-foreground">Active Days</span>
+              <span className="text-base font-bold text-primary">
                 {Object.values(monthlyStats).filter((day: any) => day.totalFocusTime > 0).length}
+                <span className="text-xs font-normal text-muted-foreground ml-1">/ {daysInMonth}</span>
               </span>
             </div>
           </div>

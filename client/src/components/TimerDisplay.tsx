@@ -1,6 +1,8 @@
 import { SessionType, usePomodoro } from '@/hooks/usePomodoro';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useAppearance } from '@/contexts/AppearanceContext'; // Added
 import { cn } from '@/lib/utils';
+
 
 interface TimerDisplayProps {
     timeLeft: number; // in seconds
@@ -10,7 +12,9 @@ interface TimerDisplayProps {
 
 export function TimerDisplay({ timeLeft, sessionType, className }: TimerDisplayProps) {
     const { settings } = usePomodoro();
+    const { settings: appearanceSettings } = useAppearance(); // Added
     const { t } = useLanguage();
+
 
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
@@ -41,7 +45,11 @@ export function TimerDisplay({ timeLeft, sessionType, className }: TimerDisplayP
     return (
         <div className={cn("flex flex-col items-center justify-center gap-8", className)}>
             {/* Circular Progress */}
-            <div className="relative w-[300px] h-[300px] sm:w-[400px] sm:h-[400px]">
+            <div className={cn(
+                "relative transition-all duration-500",
+                appearanceSettings.isCompact ? "w-[240px] h-[240px]" : "w-[300px] h-[300px] sm:w-[400px] sm:h-[400px]"
+            )}>
+
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                     {/* Track */}
                     <circle
@@ -70,10 +78,16 @@ export function TimerDisplay({ timeLeft, sessionType, className }: TimerDisplayP
 
                 {/* Time Display */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-6xl sm:text-8xl font-light tabular-nums tracking-tighter text-white drop-shadow-lg">
+                    <div className={cn(
+                        "font-light tabular-nums tracking-tighter text-white drop-shadow-lg transition-all",
+                        appearanceSettings.isCompact ? "text-5xl" : "text-6xl sm:text-8xl"
+                    )}>
                         {formatTime(minutes)}:{formatTime(seconds)}
                     </div>
-                    <div className="text-lg sm:text-xl font-medium text-white/80 mt-2 tracking-widest uppercase">
+                    <div className={cn(
+                        "font-medium text-white/80 mt-2 tracking-widest uppercase transition-all",
+                        appearanceSettings.isCompact ? "text-sm" : "text-lg sm:text-xl"
+                    )}>
                         {sessionType === 'pomodoro' ? 'FOCUS' : 'BREAK'}
                     </div>
                 </div>

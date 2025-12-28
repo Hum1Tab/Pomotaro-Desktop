@@ -127,7 +127,7 @@ export function StatsDashboard() {
               ) : (
                 dailyStats.sessions.map((session) => (
                   <div key={session.id} className="flex justify-between text-sm p-2 rounded bg-secondary/50">
-                    <span className="text-foreground">{session.taskTitle || session.sessionType}</span>
+                    <span className="text-foreground">{session.taskName || session.sessionType}</span>
                     <span className="text-muted-foreground">{formatTime(session.duration)}</span>
                   </div>
                 ))

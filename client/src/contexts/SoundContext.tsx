@@ -9,6 +9,8 @@ export interface SoundSettings {
     noiseType: NoiseType;
     sessionCompleteSound: boolean;
     breakCompleteSound: boolean;
+    playTickSound: boolean;
+    playNotificationSound: boolean;
 }
 
 const DEFAULT_SETTINGS: SoundSettings = {
@@ -18,6 +20,8 @@ const DEFAULT_SETTINGS: SoundSettings = {
     noiseType: 'brown',
     sessionCompleteSound: true,
     breakCompleteSound: true,
+    playTickSound: false,
+    playNotificationSound: true,
 };
 
 interface SoundContextType {

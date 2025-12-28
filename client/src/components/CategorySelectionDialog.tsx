@@ -46,20 +46,20 @@ export function CategorySelectionDialog({
         '⚽', '🏃', '📐', '🖊️', '📓', '🗂️',
     ];
 
-    // 学習に適したカラーパレット
+    // 学習に適したカラーパレット (落ち着いたトーン)
     const COLOR_OPTIONS = [
-        '#E8644A', // 赤（数学）
-        '#4A9EE8', // 青（英語）
-        '#8B9D83', // 緑（国語）
-        '#9B59B6', // 紫（理科）
-        '#E67E22', // オレンジ（社会）
-        '#C9A88A', // ベージュ（古典）
-        '#F39C12', // 黄色
-        '#16A085', // ターコイズ
-        '#E74C3C', // 赤
-        '#3498DB', // 青
-        '#2ECC71', // 緑
-        '#9B59B6', // 紫
+        '#E57373', // 珊瑚色
+        '#64B5F6', // 勿忘草
+        '#81C784', // 若草色
+        '#BA68C8', // 藤色
+        '#FFB74D', // 杏色
+        '#A1887F', // 栗色
+        '#FFD54F', // 山吹色
+        '#4DB6AC', // 青竹色
+        '#F06292', // 桃色
+        '#7986CB', // 藍鼠
+        '#4FC3F7', // 空色
+        '#90A4AE', // 銀鼠
     ];
 
     const handleConfirm = () => {
@@ -83,7 +83,7 @@ export function CategorySelectionDialog({
             setSelectedCategoryId(newCategory.id);
             setNewCategoryName('');
             setNewCategoryIcon('📚');
-            setNewCategoryColor('#E8644A');
+            setNewCategoryColor('#E57373');
             setShowAddForm(false);
         }
     };
@@ -92,7 +92,7 @@ export function CategorySelectionDialog({
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-bold">{t('categories.dialogTitle')}</DialogTitle>
+                    <DialogTitle className="text-xl font-bold tracking-wide">{t('categories.dialogTitle')}</DialogTitle>
                     <DialogDescription>
                         {t('categories.dialogDesc')}
                     </DialogDescription>
@@ -102,18 +102,21 @@ export function CategorySelectionDialog({
                     {/* Current Selection */}
                     {selectedCategory && (
                         <div
-                            className="p-4 rounded-lg text-white text-center space-y-2"
-                            style={{ backgroundColor: selectedCategory.color }}
+                            className="p-4 rounded-xl border-2 text-center space-y-1 shadow-sm"
+                            style={{
+                                borderColor: selectedCategory.color,
+                                backgroundColor: `${selectedCategory.color}15`,
+                            }}
                         >
-                            <div className="text-3xl">{selectedCategory.icon}</div>
-                            <div className="text-sm font-medium opacity-90">{t('categories.selected')}</div>
-                            <div className="text-lg font-bold">{selectedCategory.name}</div>
+                            <div className="text-4xl drop-shadow-sm" style={{ color: selectedCategory.color }}>{selectedCategory.icon}</div>
+                            <div className="text-xs font-bold opacity-80 uppercase tracking-widest text-muted-foreground">{t('categories.selected')}</div>
+                            <div className="text-2xl font-bold tracking-wide text-foreground">{selectedCategory.name}</div>
                         </div>
                     )}
 
                     {/* Category Selection Grid */}
                     <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">
+                        <label className="text-sm font-bold text-foreground mb-2 block tracking-wide pl-1">
                             {t('categories.select')}
                         </label>
                         <div
@@ -127,17 +130,21 @@ export function CategorySelectionDialog({
                                 <button
                                     key={category.id}
                                     onClick={() => handleCategorySelect(category)}
-                                    className={`p-3 rounded-lg transition-all ${selectedCategoryId === category.id
-                                        ? 'ring-2 ring-offset-2 ring-foreground scale-105'
-                                        : 'hover:scale-105 opacity-80 hover:opacity-100'
+                                    className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-1 relative overflow-hidden ${selectedCategoryId === category.id
+                                        ? 'ring-2 ring-offset-2 ring-primary shadow-sm scale-[1.02]'
+                                        : 'hover:scale-[1.02] hover:shadow-sm opacity-90 hover:opacity-100'
                                         }`}
                                     style={{
-                                        backgroundColor: category.color,
-                                        color: 'white',
+                                        borderColor: category.color,
+                                        backgroundColor: `${category.color}20`,
                                     }}
                                 >
-                                    <div className="text-2xl mb-1">{category.icon}</div>
-                                    <div className="text-xs font-medium truncate">{category.name}</div>
+                                    <div
+                                        className="absolute left-0 top-0 bottom-0 w-1"
+                                        style={{ backgroundColor: category.color }}
+                                    />
+                                    <div className="text-2xl" style={{ color: category.color }}>{category.icon}</div>
+                                    <div className="text-xs font-bold truncate max-w-full tracking-wide text-foreground">{category.name}</div>
                                 </button>
                             ))}
                         </div>

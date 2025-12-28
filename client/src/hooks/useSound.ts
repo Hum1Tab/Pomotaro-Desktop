@@ -132,6 +132,30 @@ export function useSound() {
         playBeep(1046.5, now + 0.36, 0.2); // C6
     }, [settings.enabled, settings.volume, getAudioContext]);
 
+    const playTickSound = useCallback(() => {
+        if (!settings.enabled || !settings.playTickSound) return;
+
+        const context = getAudioContext();
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+
+        // Mechanical "tick-tock" feel using low frequency sine pulse
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 150;
+
+        const now = context.currentTime;
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(settings.volume * 0.1, now + 0.005);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+
+        oscillator.start(now);
+        oscillator.stop(now + 0.05);
+    }, [settings.enabled, settings.playTickSound, settings.volume, getAudioContext]);
+
+
     return {
         settings,
         updateSettings,
@@ -139,5 +163,7 @@ export function useSound() {
         playBreakCompleteSound,
         playClickSound,
         playSuccessSound,
+        playTickSound,
     };
 }
+
