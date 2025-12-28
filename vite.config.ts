@@ -21,6 +21,7 @@ const plugins = [
 ];
 
 export default defineConfig({
+  base: './', // Ensure relative paths for Electron
   plugins,
   resolve: {
     alias: {

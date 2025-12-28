@@ -10,6 +10,7 @@ export interface PomodoroSettings {
     alwaysAskCategory: boolean;
     showEstimatedFinishTime: boolean;
     showTaskInput: boolean;
+    alwaysOnTop: boolean;
 }
 
 export type SessionType = 'pomodoro' | 'shortBreak' | 'longBreak';
@@ -24,6 +25,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
     alwaysAskCategory: false,
     showEstimatedFinishTime: false,
     showTaskInput: true,
+    alwaysOnTop: false,
 };
 
 interface PomodoroContextType {
@@ -115,8 +117,13 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
             }
+            // Reset taskbar progress when paused/stopped
+            if (window.electronAPI) {
+                window.electronAPI.setProgressBar(-1);
+            }
         };
     }, [isRunning, timeLeft]);
+
 
     const getSessionDuration = useCallback((type: SessionType, currentSettings: PomodoroSettings): number => {
         switch (type) {
@@ -137,6 +144,15 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         },
         [settings, getSessionDuration]
     );
+
+    // Update taskbar progress
+    useEffect(() => {
+        if (isRunning && window.electronAPI) {
+            const currentDuration = getSessionDuration(sessionType, settings);
+            const progress = 1 - (timeLeft / currentDuration);
+            window.electronAPI.setProgressBar(progress);
+        }
+    }, [timeLeft, isRunning, sessionType, settings, getSessionDuration]);
 
     const handleSessionEnd = useCallback(() => {
         setIsRunning(false);
@@ -167,12 +183,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
             }
         }
 
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('Pomotaro', {
-                body: `${sessionType === 'pomodoro' ? 'Work' : 'Break'} session completed!`,
-                icon: '/favicon.ico',
-            });
-        }
+
     }, [sessionType, sessionsCompleted, settings, getSessionDuration, switchSession]);
 
 

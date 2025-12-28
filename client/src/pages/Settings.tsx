@@ -11,6 +11,15 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Palette, Image as ImageIcon, Video, Link } from 'lucide-react';
 
+declare global {
+    interface Window {
+        electronAPI?: {
+            setAlwaysOnTop: (flag: boolean) => Promise<void>;
+            setProgressBar: (progress: number) => Promise<void>;
+        };
+    }
+}
+
 export default function Settings() {
     const [, setLocation] = useLocation();
     const { t, language, changeLanguage } = useLanguage();
@@ -642,6 +651,29 @@ export default function Settings() {
                                 </label>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Desktop Features */}
+                    <div className="space-y-4 pt-4 border-t border-border">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={tempSettings.alwaysOnTop || false}
+                                onChange={(e) => {
+                                    setTempSettings({
+                                        ...tempSettings,
+                                        alwaysOnTop: e.target.checked,
+                                    });
+                                    if (window.electronAPI) {
+                                        window.electronAPI.setAlwaysOnTop(e.target.checked);
+                                    }
+                                }}
+                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
+                            />
+                            <span className="text-sm font-medium text-foreground">
+                                最前面に固定 (Always on Top)
+                            </span>
+                        </label>
                     </div>
 
                     {/* Sound Settings */}
