@@ -329,7 +329,11 @@ export default function Settings() {
                                                         className="w-8 h-8 rounded-full shadow-sm"
                                                         style={{ background: `linear-gradient(135deg, ${preset.colors[0]}, ${preset.colors[1]})` }}
                                                     />
-                                                    <span className="text-sm font-medium">{t(`settings.theme.${themeKey}`)}</span>
+                                                    <span className="text-sm font-medium">
+                                                        {t(`settings.theme.${themeKey}`) === `settings.theme.${themeKey}`
+                                                            ? preset.name
+                                                            : t(`settings.theme.${themeKey}`)}
+                                                    </span>
                                                 </button>
                                             )
                                         })}

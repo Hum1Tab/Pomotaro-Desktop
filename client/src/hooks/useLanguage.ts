@@ -167,6 +167,7 @@ const translations: Translations = {
 
         // Themes
         'settings.themeColor': 'Color Theme',
+        'settings.theme.default': '蜜柑 (Mikan)',
         'settings.theme.custom': 'Custom',
         'settings.theme.mikan': '蜜柑 (Mikan)',
         'settings.theme.sakura': '桜 (Sakura)',
@@ -349,6 +350,7 @@ const translations: Translations = {
 
         // Themes
         'settings.themeColor': '配色テーマ',
+        'settings.theme.default': '蜜柑 (Mikan)',
         'settings.theme.custom': 'カスタム',
         'settings.theme.mikan': '蜜柑 (Mikan)',
         'settings.theme.sakura': '桜 (Sakura)',
