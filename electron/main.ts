@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, Tray, Menu, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import DiscordRPC from 'discord-rpc';
@@ -238,6 +238,7 @@ function setActivity() {
 }
 
 // IPC Handlers
+ipcMain.handle('open-external', (_, url) => shell.openExternal(url));
 
 // 1. Update Discord Activity
 ipcMain.handle('update-activity', (_, activity) => {

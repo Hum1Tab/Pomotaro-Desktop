@@ -224,7 +224,8 @@ export default function Home() {
     sound.playClickSound();
     if (window.electronAPI?.setWindowSize && window.electronAPI.isMaximized) {
       const maximized = await window.electronAPI.isMaximized();
-      if (!maximized) {
+      if (!maximized && currentCompact) {
+        // Only reset size if we are coming from compact mode
         await window.electronAPI.setWindowSize(1200, 800);
       }
       await window.electronAPI.setAlwaysOnTop(false);
