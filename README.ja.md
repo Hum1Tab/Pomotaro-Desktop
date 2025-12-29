@@ -60,4 +60,4 @@ Pomotaro（ポモタロウ）は、モダンで高機能なポモドーロ・タ
 
 ## 📄 ライセンス
 
-MIT License.
+[MIT License](LICENSE)
