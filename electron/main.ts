@@ -115,21 +115,30 @@ function createWindow() {
 
     // Check for updates only in production
     if (app.isPackaged) {
-        autoUpdater.on('update-available', () => {
-            console.log('Update available.');
+        autoUpdater.on('checking-for-update', () => {
+            mainWindow?.webContents.send('update-status', 'アップデートを確認中...');
         });
-        
+
+        autoUpdater.on('update-available', () => {
+            mainWindow?.webContents.send('update-status', '新しいバージョンが見つかりました。ダウンロードを開始します...');
+        });
+
         autoUpdater.on('update-downloaded', () => {
-            console.log('Update downloaded. Restarting to update...');
-            autoUpdater.quitAndInstall();
+            mainWindow?.webContents.send('update-status', 'ダウンロード完了。再起動して更新します。');
+            // Give user a moment to see the message before restarting
+            setTimeout(() => {
+                autoUpdater.quitAndInstall();
+            }, 3000);
         });
 
         autoUpdater.on('error', (err) => {
             console.error('Auto update error:', err);
+            mainWindow?.webContents.send('update-error', `アップデートエラー: ${err.message}`);
         });
 
         autoUpdater.checkForUpdatesAndNotify().catch(err => {
             console.error('Check for updates failed:', err);
+            mainWindow?.webContents.send('update-error', `アップデート確認失敗: ${err.message}`);
         });
     }
 

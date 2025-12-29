@@ -34,7 +34,26 @@ function Router() {
 //   to keep consistent foreground/background color across components
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
+    </ErrorBoundary >
+  );
+}
+
+import { useEffect } from "react";
+import { toast } from "sonner";
+
 function App() {
+  useEffect(() => {
+    if (window.electronAPI) {
+      window.electronAPI.onUpdateStatus((message) => {
+        toast.info(message);
+      });
+
+      window.electronAPI.onUpdateError((message) => {
+        toast.error(message);
+      });
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider
@@ -59,3 +78,20 @@ function App() {
 }
 
 export default App;
+
+declare global {
+  interface Window {
+    electronAPI?: {
+      updateActivity: (activity: any) => Promise<void>;
+      setProgressBar: (progress: number) => Promise<void>;
+      setAlwaysOnTop: (flag: boolean) => Promise<void>;
+      setWindowSize: (width: number, height: number) => Promise<void>;
+      toggleFullscreen: (flag: boolean) => Promise<void>;
+      unmaximizeWindow: () => Promise<void>;
+      isMaximized: () => Promise<boolean>;
+      onWindowStateChanged: (callback: (state: string) => void) => void;
+      onUpdateStatus: (callback: (message: string) => void) => void;
+      onUpdateError: (callback: (message: string) => void) => void;
+    };
+  }
+}
