@@ -298,15 +298,7 @@ export default function Home() {
                       <Moon className="w-5 h-5 sm:w-6 sm:h-6" />
                     )}
                   </Button>
-                  <Button
-                    onClick={() => setIsFocusMode(!isFocusMode)}
-                    variant="ghost"
-                    size="icon"
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full text-foreground/80 hover:text-foreground hover:bg-muted/50 transition-all"
-                    title={t('timer.enterFocusMode')}
-                  >
-                    <Maximize2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </Button>
+
                   <Button
                     onClick={goToSettings}
                     variant="ghost"

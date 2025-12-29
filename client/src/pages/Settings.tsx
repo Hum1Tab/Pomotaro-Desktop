@@ -1,10 +1,8 @@
-import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { usePomodoro, PomodoroSettings } from '@/hooks/usePomodoro';
-import { useSoundContext, SoundSettings } from '@/contexts/SoundContext';
-import { useAppearance, AppearanceSettings, THEME_PRESETS, PresetTheme } from '@/contexts/AppearanceContext';
+import { usePomodoro } from '@/hooks/usePomodoro';
+import { useSoundContext } from '@/contexts/SoundContext';
+import { useAppearance, THEME_PRESETS, PresetTheme, BackgroundType } from '@/contexts/AppearanceContext';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useNotifications } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -13,42 +11,16 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Palette, Image as ImageIcon, Video, Link, Volume2, Clock,
-    Layout, Maximize2, Minimize2, ChevronLeft, Save, Upload, Download
+    Layout, Maximize2, Minimize2, ChevronLeft, ArrowLeft, Upload, Download
 } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function Settings() {
     const [, setLocation] = useLocation();
-    const { settings, updateSettings } = usePomodoro();
-    const sound = useSoundContext();
+    const { settings: pomoSettings, updateSettings: updatePomoSettings } = usePomodoro();
+    const { settings: soundSettings, updateSettings: updateSoundSettings } = useSoundContext();
     const { settings: appearanceSettings, updateSettings: updateAppearance } = useAppearance();
     const { language, changeLanguage, t } = useLanguage();
-    const { requestPermission } = useNotifications();
-
-    // Local state for immediate feedback
-    const [tempPomoSettings, setTempPomoSettings] = useState<PomodoroSettings>(settings);
-    const [tempSoundSettings, setTempSoundSettings] = useState<SoundSettings>(sound.settings);
-    const [tempAppearanceSettings, setTempAppearanceSettings] = useState<AppearanceSettings>(appearanceSettings);
-
-
-
-    useEffect(() => {
-        setTempPomoSettings(settings);
-    }, [settings]);
-
-    useEffect(() => {
-        setTempSoundSettings(sound.settings);
-    }, [sound.settings]);
-
-    useEffect(() => {
-        setTempAppearanceSettings(appearanceSettings);
-    }, [appearanceSettings]);
-
-    const handleSave = () => {
-        updateSettings(tempPomoSettings);
-        sound.updateSettings(tempSoundSettings);
-        updateAppearance(tempAppearanceSettings);
-        setLocation('/');
-    };
 
     const toggleCompactMode = async () => {
         const newCompactState = !appearanceSettings.isCompact;
@@ -156,9 +128,9 @@ export default function Settings() {
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-medium">{t('settings.alwaysOnTop')}</label>
                                     <Switch
-                                        checked={tempPomoSettings.alwaysOnTop}
+                                        checked={pomoSettings.alwaysOnTop}
                                         onCheckedChange={(checked) => {
-                                            setTempPomoSettings({ ...tempPomoSettings, alwaysOnTop: checked });
+                                            updatePomoSettings({ ...pomoSettings, alwaysOnTop: checked });
                                             window.electronAPI?.setAlwaysOnTop(checked);
                                         }}
                                     />
@@ -173,9 +145,9 @@ export default function Settings() {
                                             className="w-full gap-2"
                                             onClick={() => {
                                                 const data = {
-                                                    pomodoroSettings: tempPomoSettings,
-                                                    soundSettings: tempSoundSettings,
-                                                    appearanceSettings: tempAppearanceSettings,
+                                                    pomodoroSettings: pomoSettings,
+                                                    soundSettings: soundSettings,
+                                                    appearanceSettings: appearanceSettings,
                                                     timestamp: new Date().toISOString()
                                                 };
                                                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -203,12 +175,9 @@ export default function Settings() {
                                                         reader.onload = (event) => {
                                                             try {
                                                                 const data = JSON.parse(event.target?.result as string);
-                                                                if (data.pomodoroSettings) setTempPomoSettings(data.pomodoroSettings);
-                                                                if (data.soundSettings) setTempSoundSettings(data.soundSettings);
-                                                                if (data.appearanceSettings) {
-                                                                    setTempAppearanceSettings(data.appearanceSettings);
-                                                                    updateAppearance(data.appearanceSettings); // Instant preview on import
-                                                                }
+                                                                if (data.pomodoroSettings) updatePomoSettings(data.pomodoroSettings);
+                                                                if (data.soundSettings) updateSoundSettings(data.soundSettings);
+                                                                if (data.appearanceSettings) updateAppearance(data.appearanceSettings);
                                                                 alert(t('settings.importSuccess'));
                                                             } catch (err) {
                                                                 console.error(err);
@@ -233,8 +202,8 @@ export default function Settings() {
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
-                                            value={tempPomoSettings.pomodoroTime}
-                                            onChange={(e) => setTempPomoSettings({ ...tempPomoSettings, pomodoroTime: Number(e.target.value) })}
+                                            value={pomoSettings.pomodoroTime}
+                                            onChange={(e) => updatePomoSettings({ ...pomoSettings, pomodoroTime: Number(e.target.value) })}
                                             className="font-mono text-lg"
                                         />
                                         <span className="text-sm text-muted-foreground">{t('common.minutes')}</span>
@@ -245,8 +214,8 @@ export default function Settings() {
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
-                                            value={tempPomoSettings.shortBreakTime}
-                                            onChange={(e) => setTempPomoSettings({ ...tempPomoSettings, shortBreakTime: Number(e.target.value) })}
+                                            value={pomoSettings.shortBreakTime}
+                                            onChange={(e) => updatePomoSettings({ ...pomoSettings, shortBreakTime: Number(e.target.value) })}
                                             className="font-mono text-lg"
                                         />
                                         <span className="text-sm text-muted-foreground">{t('common.minutes')}</span>
@@ -257,8 +226,8 @@ export default function Settings() {
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
-                                            value={tempPomoSettings.longBreakTime}
-                                            onChange={(e) => setTempPomoSettings({ ...tempPomoSettings, longBreakTime: Number(e.target.value) })}
+                                            value={pomoSettings.longBreakTime}
+                                            onChange={(e) => updatePomoSettings({ ...pomoSettings, longBreakTime: Number(e.target.value) })}
                                             className="font-mono text-lg"
                                         />
                                         <span className="text-sm text-muted-foreground">{t('common.minutes')}</span>
@@ -270,29 +239,29 @@ export default function Settings() {
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-medium">{t('settings.autoStartBreaks')}</label>
                                     <Switch
-                                        checked={tempPomoSettings.autoStartBreaks}
-                                        onCheckedChange={(checked) => setTempPomoSettings({ ...tempPomoSettings, autoStartBreaks: checked })}
+                                        checked={pomoSettings.autoStartBreaks}
+                                        onCheckedChange={(checked) => updatePomoSettings({ ...pomoSettings, autoStartBreaks: checked })}
                                     />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-medium">{t('settings.autoStartPomodoros')}</label>
                                     <Switch
-                                        checked={tempPomoSettings.autoStartPomodoros}
-                                        onCheckedChange={(checked) => setTempPomoSettings({ ...tempPomoSettings, autoStartPomodoros: checked })}
+                                        checked={pomoSettings.autoStartPomodoros}
+                                        onCheckedChange={(checked) => updatePomoSettings({ ...pomoSettings, autoStartPomodoros: checked })}
                                     />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-medium">{t('settings.showEstimatedFinishTime')}</label>
                                     <Switch
-                                        checked={tempPomoSettings.showEstimatedFinishTime}
-                                        onCheckedChange={(checked) => setTempPomoSettings({ ...tempPomoSettings, showEstimatedFinishTime: checked })}
+                                        checked={pomoSettings.showEstimatedFinishTime}
+                                        onCheckedChange={(checked) => updatePomoSettings({ ...pomoSettings, showEstimatedFinishTime: checked })}
                                     />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-medium">{t('settings.showTaskInput')}</label>
                                     <Switch
-                                        checked={tempPomoSettings.showTaskInput}
-                                        onCheckedChange={(checked) => setTempPomoSettings({ ...tempPomoSettings, showTaskInput: checked })}
+                                        checked={pomoSettings.showTaskInput}
+                                        onCheckedChange={(checked) => updatePomoSettings({ ...pomoSettings, showTaskInput: checked })}
                                     />
                                 </div>
                             </div>
@@ -308,20 +277,17 @@ export default function Settings() {
                                         {(Object.keys(THEME_PRESETS) as PresetTheme[]).map((themeKey) => {
                                             if (themeKey === 'custom') return null;
                                             const preset = THEME_PRESETS[themeKey];
-                                            const isSelected = tempAppearanceSettings.backgroundTheme === themeKey;
+                                            const isSelected = appearanceSettings.backgroundTheme === themeKey;
 
                                             return (
                                                 <button
                                                     key={themeKey}
                                                     onClick={() => {
-                                                        const newSettings: AppearanceSettings = {
-                                                            ...tempAppearanceSettings,
+                                                        updateAppearance({
                                                             backgroundType: 'gradient',
                                                             backgroundTheme: themeKey,
                                                             gradientColors: preset.colors
-                                                        };
-                                                        setTempAppearanceSettings(newSettings);
-                                                        updateAppearance(newSettings); // Instant Preview
+                                                        });
                                                     }}
                                                     className={`
                                                         relative flex items-center gap-3 p-3 rounded-xl border transition-all overflow-hidden
@@ -342,17 +308,14 @@ export default function Settings() {
                                         {/* Custom Option */}
                                         <button
                                             onClick={() => {
-                                                const newSettings: AppearanceSettings = {
-                                                    ...tempAppearanceSettings,
+                                                updateAppearance({
                                                     backgroundType: 'gradient',
                                                     backgroundTheme: 'custom'
-                                                };
-                                                setTempAppearanceSettings(newSettings);
-                                                updateAppearance(newSettings); // Instant Preview
+                                                });
                                             }}
                                             className={`
                                                 relative flex items-center gap-3 p-3 rounded-xl border transition-all overflow-hidden
-                                                ${tempAppearanceSettings.backgroundTheme === 'custom'
+                                                ${appearanceSettings.backgroundTheme === 'custom'
                                                     ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
                                                     : 'border-border hover:border-primary/50 hover:bg-muted/50'}
                                             `}
@@ -366,39 +329,35 @@ export default function Settings() {
                                 </div>
 
                                 {/* Detailed Gradient Controls (Only if Custom) */}
-                                {tempAppearanceSettings.backgroundTheme === 'custom' && tempAppearanceSettings.backgroundType === 'gradient' && (
+                                {appearanceSettings.backgroundTheme === 'custom' && appearanceSettings.backgroundType === 'gradient' && (
                                     <div className="space-y-3 pt-4 border-t border-border/50 animate-fade-in">
                                         <label className="text-sm font-medium text-foreground">{t('settings.customGradient')}</label>
                                         <div className="flex gap-4">
                                             <div className="flex items-center gap-2">
                                                 <input
                                                     type="color"
-                                                    value={tempAppearanceSettings.gradientColors[0]}
+                                                    value={appearanceSettings.gradientColors[0]}
                                                     onChange={(e) => {
-                                                        const newColors = [...tempAppearanceSettings.gradientColors] as [string, string];
+                                                        const newColors = [...appearanceSettings.gradientColors] as [string, string];
                                                         newColors[0] = e.target.value;
-                                                        const newSettings = { ...tempAppearanceSettings, gradientColors: newColors };
-                                                        setTempAppearanceSettings(newSettings);
-                                                        updateAppearance(newSettings); // Instant Preview
+                                                        updateAppearance({ gradientColors: newColors });
                                                     }}
                                                     className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0"
                                                 />
-                                                <span className="text-xs font-mono">{tempAppearanceSettings.gradientColors[0]}</span>
+                                                <span className="text-xs font-mono">{appearanceSettings.gradientColors[0]}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <input
                                                     type="color"
-                                                    value={tempAppearanceSettings.gradientColors[1]}
+                                                    value={appearanceSettings.gradientColors[1]}
                                                     onChange={(e) => {
-                                                        const newColors = [...tempAppearanceSettings.gradientColors] as [string, string];
+                                                        const newColors = [...appearanceSettings.gradientColors] as [string, string];
                                                         newColors[1] = e.target.value;
-                                                        const newSettings = { ...tempAppearanceSettings, gradientColors: newColors };
-                                                        setTempAppearanceSettings(newSettings);
-                                                        updateAppearance(newSettings); // Instant Preview
+                                                        updateAppearance({ gradientColors: newColors });
                                                     }}
                                                     className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0"
                                                 />
-                                                <span className="text-xs font-mono">{tempAppearanceSettings.gradientColors[1]}</span>
+                                                <span className="text-xs font-mono">{appearanceSettings.gradientColors[1]}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -408,44 +367,24 @@ export default function Settings() {
                                 <div className="space-y-3 pt-6 border-t border-border/50">
                                     <label className="text-sm font-medium text-foreground">{t('settings.section.media')}</label>
                                     <div className="grid grid-cols-3 gap-2">
-                                        <Button
-                                            variant={tempAppearanceSettings.backgroundType === 'gradient' ? 'default' : 'outline'}
-                                            onClick={() => {
-                                                const newSettings: AppearanceSettings = { ...tempAppearanceSettings, backgroundType: 'gradient' };
-                                                setTempAppearanceSettings(newSettings);
-                                                updateAppearance(newSettings);
-                                            }}
-                                            className="gap-2"
-                                        >
-                                            <Palette className="w-4 h-4" /> {t('settings.bg.gradient')}
-                                        </Button>
-                                        <Button
-                                            variant={tempAppearanceSettings.backgroundType === 'image' ? 'default' : 'outline'}
-                                            onClick={() => {
-                                                const newSettings: AppearanceSettings = { ...tempAppearanceSettings, backgroundType: 'image' };
-                                                setTempAppearanceSettings(newSettings);
-                                                updateAppearance(newSettings);
-                                            }}
-                                            className="gap-2"
-                                        >
-                                            <ImageIcon className="w-4 h-4" /> {t('settings.bg.image')}
-                                        </Button>
-                                        <Button
-                                            variant={tempAppearanceSettings.backgroundType === 'video' ? 'default' : 'outline'}
-                                            onClick={() => {
-                                                const newSettings: AppearanceSettings = { ...tempAppearanceSettings, backgroundType: 'video' };
-                                                setTempAppearanceSettings(newSettings);
-                                                updateAppearance(newSettings);
-                                            }}
-                                            className="gap-2"
-                                        >
-                                            <Video className="w-4 h-4" /> {t('settings.bg.video')}
-                                        </Button>
+                                        {(['gradient', 'image', 'video'] as BackgroundType[]).map((type) => (
+                                            <Button
+                                                key={type}
+                                                variant={appearanceSettings.backgroundType === type ? 'default' : 'outline'}
+                                                onClick={() => updateAppearance({ backgroundType: type })}
+                                                className="gap-2"
+                                            >
+                                                {type === 'gradient' && <Palette className="w-4 h-4" />}
+                                                {type === 'image' && <ImageIcon className="w-4 h-4" />}
+                                                {type === 'video' && <Video className="w-4 h-4" />}
+                                                {t(`settings.bg.${type}`)}
+                                            </Button>
+                                        ))}
                                     </div>
                                 </div>
 
                                 {/* Media URL & Opacity */}
-                                {(tempAppearanceSettings.backgroundType === 'image' || tempAppearanceSettings.backgroundType === 'video') && (
+                                {(appearanceSettings.backgroundType === 'image' || appearanceSettings.backgroundType === 'video') && (
                                     <div className="space-y-4 animate-fade-in">
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium">{t('settings.mediaUrl')}</label>
@@ -453,12 +392,8 @@ export default function Settings() {
                                                 <div className="relative flex-1">
                                                     <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                                     <Input
-                                                        value={tempAppearanceSettings.mediaUrl}
-                                                        onChange={(e) => {
-                                                            const newSettings = { ...tempAppearanceSettings, mediaUrl: e.target.value };
-                                                            setTempAppearanceSettings(newSettings);
-                                                            updateAppearance(newSettings); // Instant Preview
-                                                        }}
+                                                        value={appearanceSettings.mediaUrl}
+                                                        onChange={(e) => updateAppearance({ mediaUrl: e.target.value })}
                                                         placeholder="https://example.com/image.jpg"
                                                         className="pl-9"
                                                     />
@@ -468,15 +403,11 @@ export default function Settings() {
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
                                                 <label className="text-sm font-medium">{t('settings.overlayOpacity')}</label>
-                                                <span className="text-sm text-muted-foreground">{Math.round(tempAppearanceSettings.bgOpacity * 100)}%</span>
+                                                <span className="text-sm text-muted-foreground">{Math.round(appearanceSettings.bgOpacity * 100)}%</span>
                                             </div>
                                             <Slider
-                                                value={[tempAppearanceSettings.bgOpacity]}
-                                                onValueChange={(val) => {
-                                                    const newSettings = { ...tempAppearanceSettings, bgOpacity: val[0] };
-                                                    setTempAppearanceSettings(newSettings);
-                                                    updateAppearance(newSettings); // Instant Preview
-                                                }}
+                                                value={[appearanceSettings.bgOpacity]}
+                                                onValueChange={(val) => updateAppearance({ bgOpacity: val[0] })}
                                                 max={1}
                                                 step={0.1}
                                             />
@@ -492,11 +423,11 @@ export default function Settings() {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-medium">{t('settings.soundVolume')}</label>
-                                        <span className="text-sm text-muted-foreground">{Math.round(tempSoundSettings.volume * 100)}%</span>
+                                        <span className="text-sm text-muted-foreground">{Math.round(soundSettings.volume * 100)}%</span>
                                     </div>
                                     <Slider
-                                        value={[tempSoundSettings.volume]}
-                                        onValueChange={(val) => setTempSoundSettings({ ...tempSoundSettings, volume: val[0] })}
+                                        value={[soundSettings.volume]}
+                                        onValueChange={(val) => updateSoundSettings({ volume: val[0] })}
                                         max={1}
                                         step={0.01}
                                     />
@@ -505,11 +436,11 @@ export default function Settings() {
                                 <div className="space-y-4 pt-4 border-t border-border/50">
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-medium">{t('settings.whiteNoiseVolume')}</label>
-                                        <span className="text-sm text-muted-foreground">{Math.round(tempSoundSettings.whiteNoiseVolume * 100)}%</span>
+                                        <span className="text-sm text-muted-foreground">{Math.round(soundSettings.whiteNoiseVolume * 100)}%</span>
                                     </div>
                                     <Slider
-                                        value={[tempSoundSettings.whiteNoiseVolume]}
-                                        onValueChange={(val) => setTempSoundSettings({ ...tempSoundSettings, whiteNoiseVolume: val[0] })}
+                                        value={[soundSettings.whiteNoiseVolume]}
+                                        onValueChange={(val) => updateSoundSettings({ whiteNoiseVolume: val[0] })}
                                         max={1}
                                         step={0.01}
                                     />
@@ -517,8 +448,8 @@ export default function Settings() {
                                         {(['white', 'pink', 'brown'] as const).map(type => (
                                             <Button
                                                 key={type}
-                                                variant={tempSoundSettings.noiseType === type ? 'default' : 'outline'}
-                                                onClick={() => setTempSoundSettings({ ...tempSoundSettings, noiseType: type })}
+                                                variant={soundSettings.noiseType === type ? 'default' : 'outline'}
+                                                onClick={() => updateSoundSettings({ noiseType: type })}
                                                 size="sm"
                                             >
                                                 {t(`settings.noise.${type}`)}
@@ -531,15 +462,15 @@ export default function Settings() {
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-medium">{t('settings.tickSound')}</label>
                                         <Switch
-                                            checked={tempSoundSettings.playTickSound}
-                                            onCheckedChange={(checked) => setTempSoundSettings({ ...tempSoundSettings, playTickSound: checked })}
+                                            checked={soundSettings.playTickSound}
+                                            onCheckedChange={(checked) => updateSoundSettings({ playTickSound: checked })}
                                         />
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-medium">{t('settings.notificationSound')}</label>
                                         <Switch
-                                            checked={tempSoundSettings.playNotificationSound}
-                                            onCheckedChange={(checked) => setTempSoundSettings({ ...tempSoundSettings, playNotificationSound: checked })}
+                                            checked={soundSettings.playNotificationSound}
+                                            onCheckedChange={(checked) => updateSoundSettings({ playNotificationSound: checked })}
                                         />
                                     </div>
                                 </div>
@@ -548,10 +479,13 @@ export default function Settings() {
                     </Tabs>
 
                     {/* Footer Actions */}
-                    <div className="flex justify-end pt-6 mt-6 border-t border-border/50">
-                        <Button onClick={handleSave} size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all">
-                            <Save className="w-5 h-5" />
-                            {t('settings.save')}
+                    <div className="flex justify-between pt-6 mt-6 border-t border-border/50">
+                        <div className="text-xs text-muted-foreground">
+                            {/* Auto-saving indicator could go here if needed */}
+                        </div>
+                        <Button onClick={() => setLocation('/')} size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all">
+                            <ArrowLeft className="w-5 h-5" />
+                            {t('settings.back')}
                         </Button>
                     </div>
                 </Card>
