@@ -14,6 +14,9 @@ declare global {
             unmaximizeWindow: () => Promise<void>;
             isMaximized: () => Promise<boolean>;
             onWindowStateChanged: (callback: (state: string) => void) => void;
+            onUpdateStatus: (callback: (message: string) => void) => void;
+            onUpdateError: (callback: (message: string) => void) => void;
+            openExternal: (url: string) => Promise<void>;
         };
     }
 }

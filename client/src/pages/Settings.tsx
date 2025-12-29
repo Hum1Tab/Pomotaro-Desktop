@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Palette, Image as ImageIcon, Video, Link, Volume2, Clock,
-    Layout, Maximize2, Minimize2, ChevronLeft, ArrowLeft, Upload, Download
+    Layout, Maximize2, Minimize2, ChevronLeft, ArrowLeft, Upload, Download, Heart
 } from 'lucide-react';
 import { useEffect } from 'react';
 
@@ -144,10 +144,15 @@ export default function Settings() {
                                             variant="outline"
                                             className="w-full gap-2"
                                             onClick={() => {
+                                                const sessions = localStorage.getItem('pomotaro-sessions');
+                                                const tasks = localStorage.getItem('pomodoroTasks');
+
                                                 const data = {
                                                     pomodoroSettings: pomoSettings,
                                                     soundSettings: soundSettings,
                                                     appearanceSettings: appearanceSettings,
+                                                    sessionHistory: sessions ? JSON.parse(sessions) : [],
+                                                    tasks: tasks ? JSON.parse(tasks) : [],
                                                     timestamp: new Date().toISOString()
                                                 };
                                                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -178,7 +183,18 @@ export default function Settings() {
                                                                 if (data.pomodoroSettings) updatePomoSettings(data.pomodoroSettings);
                                                                 if (data.soundSettings) updateSoundSettings(data.soundSettings);
                                                                 if (data.appearanceSettings) updateAppearance(data.appearanceSettings);
+
+                                                                // Import history and tasks
+                                                                if (data.sessionHistory) {
+                                                                    localStorage.setItem('pomotaro-sessions', JSON.stringify(data.sessionHistory));
+                                                                }
+                                                                if (data.tasks) {
+                                                                    localStorage.setItem('pomodoroTasks', JSON.stringify(data.tasks));
+                                                                }
+
                                                                 alert(t('settings.importSuccess'));
+                                                                // Reload to reflect data changes (Tasks, History)
+                                                                window.location.reload();
                                                             } catch (err) {
                                                                 console.error(err);
                                                                 alert(t('settings.importError'));
@@ -190,6 +206,19 @@ export default function Settings() {
                                             />
                                         </Button>
                                     </div>
+                                </div>
+
+                                {/* Support Section */}
+                                <div className="space-y-4 pt-4 border-t border-border/50">
+                                    <h3 className="text-lg font-medium">{t('settings.section.support')}</h3>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full gap-2 text-pink-500 hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-950/30 border-pink-200 dark:border-pink-900"
+                                        onClick={() => window.electronAPI ? window.electronAPI.openExternal('https://github.com/sponsors/Hum1Tab') : window.open('https://github.com/sponsors/Hum1Tab', '_blank')}
+                                    >
+                                        <Heart className="w-4 h-4 fill-current" /> {t('settings.support.github')}
+                                    </Button>
+                                    <p className="text-xs text-muted-foreground text-center">{t('settings.support.desc')}</p>
                                 </div>
                             </div>
                         </TabsContent>

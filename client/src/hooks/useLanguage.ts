@@ -144,6 +144,7 @@ const translations: Translations = {
         'exams.today': 'Today',
         'exams.noExams': 'No exam dates registered.',
         'exams.addPrompt': 'Please add an exam date from the form above.',
+        'settings.support.desc': 'Your support helps minimize bugs and develop new features.',
         'timer.estimatedFinishTime': 'Estimated Finish: ',
 
         // Settings Tabs & Sections
@@ -154,6 +155,8 @@ const translations: Translations = {
         'settings.section.display': 'Display & Notifications',
         'settings.section.data': 'Data',
         'settings.section.media': 'Media Background',
+        'settings.section.support': 'Support Development',
+        'settings.support.github': 'Become a Sponsor on GitHub',
 
         // Compact Mode
         'settings.compactMode': 'Compact Mode (Mini Window)',
@@ -323,6 +326,7 @@ const translations: Translations = {
         'exams.today': '今日',
         'exams.noExams': '登録されている試験日はありません。',
         'exams.addPrompt': '上のフォームから試験日を追加してください。',
+        'settings.support.desc': 'ご支援はバグ修正や新機能開発の励みになります。',
         'timer.estimatedFinishTime': '終了予定: ',
 
         // Settings Tabs & Sections
@@ -333,6 +337,8 @@ const translations: Translations = {
         'settings.section.display': '表示と通知',
         'settings.section.data': 'データ管理',
         'settings.section.media': 'メディア背景',
+        'settings.section.support': '開発を支援',
+        'settings.support.github': 'GitHubでスポンサーになる',
 
         // Compact Mode
         'settings.compactMode': 'コンパクトモード (ミニウィンドウ)',
