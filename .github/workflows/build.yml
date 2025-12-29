@@ -32,7 +32,7 @@ jobs:
         
       - name: Build Installer
         # GitHub Actions has no network restrictions, so we can let it rebuild if needed
-        run: npx electron-builder --win nsis
+        run: npx electron-builder --win nsis -p never
 
           
       - name: Upload Artifacts
