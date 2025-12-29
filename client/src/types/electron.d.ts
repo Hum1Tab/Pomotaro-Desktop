@@ -1,0 +1,19 @@
+
+export { };
+
+declare global {
+    interface Window {
+        electronAPI?: {
+            setAlwaysOnTop: (flag: boolean) => Promise<void>;
+            // Note: 'setProgressBar' in preload but 'set-progress-bar' in main/ipc.
+            // Preload maps: setProgressBar -> invoke('set-progress-bar')
+            setProgressBar: (progress: number) => Promise<void>;
+            setWindowSize: (width: number, height: number) => Promise<void>;
+            toggleFullscreen: (flag: boolean) => Promise<void>;
+            updateActivity: (activity: any) => Promise<void>;
+            unmaximizeWindow: () => Promise<void>;
+            isMaximized: () => Promise<boolean>;
+            onWindowStateChanged: (callback: (state: string) => void) => void;
+        };
+    }
+}
