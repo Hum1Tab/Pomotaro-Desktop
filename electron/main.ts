@@ -127,7 +127,7 @@ function createWindow() {
             mainWindow?.webContents.send('update-status', 'ダウンロード完了。再起動して更新します。');
             // Give user a moment to see the message before restarting
             setTimeout(() => {
-                autoUpdater.quitAndInstall();
+                autoUpdater.quitAndInstall(true, true);
             }, 3000);
         });
 
