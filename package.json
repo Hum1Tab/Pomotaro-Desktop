@@ -132,6 +132,11 @@
     "win": {
       "target": "nsis",
       "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "include": "build/uninstaller.nsh"
     }
   }
 }
