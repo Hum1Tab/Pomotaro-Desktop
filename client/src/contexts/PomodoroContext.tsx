@@ -11,6 +11,14 @@ export interface PomodoroSettings {
     showEstimatedFinishTime: boolean;
     showTaskInput: boolean;
     alwaysOnTop: boolean;
+    enableDiscordRpc: boolean;
+    showCategoryOnRpc: boolean;
+    showPomodorosOnRpc: boolean;
+    rpcTextWorking: string;
+    rpcTextBreaking: string;
+    rpcTextPaused: string;
+    rpcTextCategoryWorkingSuffix: string;
+    rpcTextCategoryBreakingSuffix: string;
 }
 
 export type SessionType = 'pomodoro' | 'shortBreak' | 'longBreak';
@@ -26,6 +34,14 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
     showEstimatedFinishTime: false,
     showTaskInput: true,
     alwaysOnTop: false,
+    enableDiscordRpc: true,
+    showCategoryOnRpc: true,
+    showPomodorosOnRpc: true,
+    rpcTextWorking: 'Pomotaro で作業中',
+    rpcTextBreaking: '休憩中',
+    rpcTextPaused: '一時停止中',
+    rpcTextCategoryWorkingSuffix: ' を共同学習中',
+    rpcTextCategoryBreakingSuffix: ' の合間に休憩中',
 };
 
 interface PomodoroContextType {
@@ -40,6 +56,7 @@ interface PomodoroContextType {
     reset: () => void;
     switchSession: (type: SessionType) => void;
     registerSessionCompleteCallback: (callback: (type: SessionType, duration: number) => void) => void;
+    expectedEndTime: number | null;
 }
 
 const PomodoroContext = createContext<PomodoroContextType | undefined>(undefined);
@@ -50,6 +67,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     const [timeLeft, setTimeLeft] = useState(DEFAULT_SETTINGS.pomodoroTime * 60);
     const [isRunning, setIsRunning] = useState(false);
     const [sessionsCompleted, setSessionsCompleted] = useState(0);
+    const [expectedEndTime, setExpectedEndTime] = useState<number | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const onSessionCompleteRef = useRef<
         ((type: SessionType, duration: number) => void) | null
@@ -58,14 +76,20 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     // Load settings
     useEffect(() => {
         const savedSettings = localStorage.getItem('pomodoroSettings');
+        let currentSettings = DEFAULT_SETTINGS;
         if (savedSettings) {
             try {
                 const parsed = JSON.parse(savedSettings);
-                setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+                currentSettings = { ...DEFAULT_SETTINGS, ...parsed };
+                setSettings(currentSettings);
             } catch (error) {
                 console.error('Failed to load settings:', error);
             }
         }
+
+        // Initialize timeLeft based on loaded settings
+        setTimeLeft(currentSettings.pomodoroTime * 60);
+
         const savedSessions = localStorage.getItem('sessionsCompleted');
         if (savedSessions) {
             try {
@@ -74,16 +98,50 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
                 console.error('Failed to load sessions:', error);
             }
         }
+
+        // Restore Timer State
+        const savedTimerState = localStorage.getItem('pomodoroTimerState');
+        if (savedTimerState) {
+            try {
+                const { isRunning: savedIsRunning, sessionType: savedType, expectedEndTime: savedEnd, timeLeft: savedLeft } = JSON.parse(savedTimerState);
+
+                setSessionType(savedType);
+
+                if (savedIsRunning && savedEnd) {
+                    const now = Date.now();
+                    if (savedEnd > now) {
+                        setExpectedEndTime(savedEnd);
+                        setTimeLeft(Math.floor((savedEnd - now) / 1000));
+                        setIsRunning(true);
+                    } else {
+                        // Was running but already finished
+                        setExpectedEndTime(null);
+                        setTimeLeft(0);
+                        setIsRunning(false);
+                        // handleSessionEnd will be called by useEffect if we set isRunning true briefly,
+                        // or we can call it manually. Let's set it to 0 and let the loop handle it.
+                    }
+                } else {
+                    setIsRunning(false);
+                    setTimeLeft(savedLeft);
+                    setExpectedEndTime(null);
+                }
+            } catch (e) {
+                console.error('Failed to restore timer state', e);
+            }
+        }
     }, []);
 
-    // Sync timeLeft when settings load (if not running)
+    // Save timer state periodically or on change
     useEffect(() => {
-        if (!isRunning) {
-            // Only reset logic if we want to force time update on settings change
-            // But usually we want to keep current timer if it matches.
-            // Simplified: when settings change, we might not want to reset timer immediately unless type duration changed.
-        }
-    }, [settings]);
+        const state = {
+            isRunning,
+            sessionType,
+            expectedEndTime,
+            timeLeft
+        };
+        localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
+    }, [isRunning, sessionType, expectedEndTime, timeLeft]);
 
     // Save settings
     useEffect(() => {
@@ -95,18 +153,19 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('sessionsCompleted', sessionsCompleted.toString());
     }, [sessionsCompleted]);
 
-    // Timer tick
+    // Timer tick - Enhanced Accuracy
     useEffect(() => {
-        if (isRunning && timeLeft > 0) {
+        if (isRunning && expectedEndTime) {
             intervalRef.current = setInterval(() => {
-                setTimeLeft((prev) => {
-                    if (prev <= 1) {
-                        handleSessionEnd();
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
+                const now = Date.now();
+                const remaining = Math.max(0, Math.floor((expectedEndTime - now) / 1000));
+
+                setTimeLeft(remaining);
+
+                if (remaining <= 0) {
+                    handleSessionEnd();
+                }
+            }, 500); // Check more frequently for higher accuracy
         } else {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
@@ -117,12 +176,11 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
             }
-            // Reset taskbar progress when paused/stopped
             if (window.electronAPI) {
                 window.electronAPI.setProgressBar(-1);
             }
         };
-    }, [isRunning, timeLeft]);
+    }, [isRunning, expectedEndTime]);
 
 
     const getSessionDuration = useCallback((type: SessionType, currentSettings: PomodoroSettings): number => {
@@ -145,52 +203,116 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         [settings, getSessionDuration]
     );
 
-    // Update taskbar progress
+    // Update taskbar progress and Discord RPC
     useEffect(() => {
-        if (isRunning && window.electronAPI) {
+        if (window.electronAPI) {
             const currentDuration = getSessionDuration(sessionType, settings);
-            const progress = 1 - (timeLeft / currentDuration);
-            window.electronAPI.setProgressBar(progress);
+
+            if (isRunning) {
+                const progress = 1 - (timeLeft / currentDuration);
+                window.electronAPI.setProgressBar(progress);
+
+                // Update Discord RPC if enabled
+                if (settings.enableDiscordRpc) {
+                    const endTimestamp = Date.now() + timeLeft * 1000;
+
+                    // Get base text from settings
+                    let baseState = sessionType === 'pomodoro'
+                        ? (settings.rpcTextWorking || 'Pomotaro で作業中')
+                        : (settings.rpcTextBreaking || '休憩中');
+
+                    // Get current category name if enabled
+                    if (settings.showCategoryOnRpc) {
+                        const savedSelectedId = localStorage.getItem('selectedCategoryId');
+                        const savedCategories = localStorage.getItem('studyCategories');
+                        if (savedSelectedId && savedCategories) {
+                            try {
+                                const categories = JSON.parse(savedCategories);
+                                const currentCat = categories.find((c: any) => c.id === savedSelectedId);
+                                if (currentCat) {
+                                    baseState = sessionType === 'pomodoro'
+                                        ? `${currentCat.name}${settings.rpcTextCategoryWorkingSuffix || ' を共同学習中'}`
+                                        : `${currentCat.name}${settings.rpcTextCategoryBreakingSuffix || ' の合間に休憩中'}`;
+                                }
+                            } catch (e) {
+                                console.error('Failed to parse categories for RPC', e);
+                            }
+                        }
+                    }
+
+                    window.electronAPI.updateActivity({
+                        details: sessionType === 'pomodoro' ? '集中中' : '休憩中',
+                        state: baseState,
+                        endTimestamp,
+                        sessionType,
+                        sessionsCompleted: settings.showPomodorosOnRpc ? sessionsCompleted : 0
+                    });
+                } else {
+                    // If RPC is disabled but was previously enabled, we might want to clear it.
+                    // However, we don't have a direct "clear" yet, so we send a minimal activity or do nothing.
+                }
+            } else {
+                window.electronAPI.setProgressBar(-1);
+                if (settings.enableDiscordRpc) {
+                    window.electronAPI.updateActivity({
+                        details: '一時停止中',
+                        state: settings.rpcTextPaused || '一時停止中',
+                        sessionType,
+                        sessionsCompleted: settings.showPomodorosOnRpc ? sessionsCompleted : 0
+                    });
+                }
+            }
         }
-    }, [timeLeft, isRunning, sessionType, settings, getSessionDuration]);
+    }, [timeLeft, isRunning, sessionType, settings, getSessionDuration, sessionsCompleted]);
 
     const handleSessionEnd = useCallback(() => {
         setIsRunning(false);
+        setExpectedEndTime(null); // Clear expected end time
         const sessionDuration = getSessionDuration(sessionType, settings);
 
         if (onSessionCompleteRef.current) {
             onSessionCompleteRef.current(sessionType, sessionDuration);
         }
 
+        let nextSessionType: SessionType;
+        let autoStart = false;
+
         if (sessionType === 'pomodoro') {
             const newCount = sessionsCompleted + 1;
             setSessionsCompleted(newCount);
-            const nextSessionType =
-                newCount % settings.longBreakInterval === 0 ? 'longBreak' : 'shortBreak';
-
-            if (settings.autoStartBreaks) {
-                switchSession(nextSessionType);
-                setIsRunning(true);
-            } else {
-                switchSession(nextSessionType);
-            }
+            nextSessionType = newCount % settings.longBreakInterval === 0 ? 'longBreak' : 'shortBreak';
+            autoStart = settings.autoStartBreaks;
         } else {
-            if (settings.autoStartPomodoros) {
-                switchSession('pomodoro');
-                setIsRunning(true);
-            } else {
-                switchSession('pomodoro');
-            }
+            nextSessionType = 'pomodoro';
+            autoStart = settings.autoStartPomodoros;
         }
 
+        setSessionType(nextSessionType);
+        const nextDuration = getSessionDuration(nextSessionType, settings);
+        setTimeLeft(nextDuration);
 
-    }, [sessionType, sessionsCompleted, settings, getSessionDuration, switchSession]);
+        if (autoStart) {
+            setExpectedEndTime(Date.now() + nextDuration * 1000);
+            setIsRunning(true);
+        }
+    }, [sessionType, sessionsCompleted, settings, getSessionDuration]);
 
 
-    const start = useCallback(() => setIsRunning(true), []);
-    const pause = useCallback(() => setIsRunning(false), []);
+    const start = useCallback(() => {
+        if (!isRunning) {
+            setExpectedEndTime(Date.now() + timeLeft * 1000);
+            setIsRunning(true);
+        }
+    }, [isRunning, timeLeft]);
+
+    const pause = useCallback(() => {
+        setIsRunning(false);
+        setExpectedEndTime(null);
+    }, []);
+
     const reset = useCallback(() => {
         setIsRunning(false);
+        setExpectedEndTime(null);
         setTimeLeft(getSessionDuration(sessionType, settings));
     }, [sessionType, settings, getSessionDuration]);
 
@@ -221,7 +343,8 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         pause,
         reset,
         switchSession,
-        registerSessionCompleteCallback
+        registerSessionCompleteCallback,
+        expectedEndTime
     }), [
         settings,
         updateSettings,
@@ -233,7 +356,8 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         pause,
         reset,
         switchSession,
-        registerSessionCompleteCallback
+        registerSessionCompleteCallback,
+        expectedEndTime
     ]);
 
     return (
