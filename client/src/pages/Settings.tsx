@@ -13,7 +13,7 @@ import {
     Palette, Image as ImageIcon, Video, Link, Volume2, Clock,
     Layout, Maximize2, Minimize2, ChevronLeft, ArrowLeft, Upload, Download, Heart
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Settings() {
     const [, setLocation] = useLocation();
@@ -21,6 +21,22 @@ export default function Settings() {
     const { settings: soundSettings, updateSettings: updateSoundSettings } = useSoundContext();
     const { settings: appearanceSettings, updateSettings: updateAppearance } = useAppearance();
     const { language, changeLanguage, t } = useLanguage();
+
+    // Auto Launch State
+    const [isAutoLaunch, setIsAutoLaunch] = useState(false);
+
+    useEffect(() => {
+        if (window.electronAPI?.getAutoLaunch) {
+            window.electronAPI.getAutoLaunch().then(setIsAutoLaunch);
+        }
+    }, []);
+
+    const toggleAutoLaunch = async (checked: boolean) => {
+        setIsAutoLaunch(checked);
+        if (window.electronAPI?.setAutoLaunch) {
+            await window.electronAPI.setAutoLaunch(checked);
+        }
+    };
 
     const toggleCompactMode = async () => {
         const newCompactState = !appearanceSettings.isCompact;
@@ -132,6 +148,26 @@ export default function Settings() {
                                         onCheckedChange={(checked) => {
                                             updatePomoSettings({ ...pomoSettings, alwaysOnTop: checked });
                                             window.electronAPI?.setAlwaysOnTop(checked);
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Auto Launch */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">{t('settings.autoLaunch') || 'スタートアップ起動'}</label>
+                                    <Switch
+                                        checked={isAutoLaunch}
+                                        onCheckedChange={toggleAutoLaunch}
+                                    />
+                                </div>
+
+                                {/* Prevent Sleep */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">{t('settings.preventSleep') || 'スリープ抑制'}</label>
+                                    <Switch
+                                        checked={pomoSettings.preventSleep}
+                                        onCheckedChange={(checked) => {
+                                            updatePomoSettings({ ...pomoSettings, preventSleep: checked });
                                         }}
                                     />
                                 </div>

@@ -11,6 +11,7 @@ export interface PomodoroSettings {
     showEstimatedFinishTime: boolean;
     showTaskInput: boolean;
     alwaysOnTop: boolean;
+    preventSleep: boolean;
     enableDiscordRpc: boolean;
     showCategoryOnRpc: boolean;
     showPomodorosOnRpc: boolean;
@@ -34,6 +35,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
     showEstimatedFinishTime: false,
     showTaskInput: true,
     alwaysOnTop: false,
+    preventSleep: true,
     enableDiscordRpc: true,
     showCategoryOnRpc: true,
     showPomodorosOnRpc: true,
@@ -202,6 +204,24 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         },
         [settings, getSessionDuration]
     );
+
+    // Handle Always on Top
+    useEffect(() => {
+        if (window.electronAPI && window.electronAPI.setAlwaysOnTop) {
+            window.electronAPI.setAlwaysOnTop(settings.alwaysOnTop);
+        }
+    }, [settings.alwaysOnTop]);
+
+    // Handle Power Save Blocking
+    useEffect(() => {
+        if (window.electronAPI && window.electronAPI.setPowerSaveBlocker) {
+            if (isRunning && settings.preventSleep) {
+                window.electronAPI.setPowerSaveBlocker(true);
+            } else {
+                window.electronAPI.setPowerSaveBlocker(false);
+            }
+        }
+    }, [isRunning, settings.preventSleep]);
 
     // Update taskbar progress and Discord RPC
     useEffect(() => {

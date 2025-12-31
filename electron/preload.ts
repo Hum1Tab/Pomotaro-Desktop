@@ -22,5 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
     restartApp: () => ipcRenderer.invoke('restart-app'),
     openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
+    setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('set-auto-launch', enabled),
+    getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
+    setPowerSaveBlocker: (enabled: boolean) => ipcRenderer.invoke('set-power-save-blocker', enabled),
 });
 

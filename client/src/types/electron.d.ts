@@ -17,6 +17,9 @@ declare global {
             onUpdateStatus: (callback: (message: string) => void) => void;
             onUpdateError: (callback: (message: string) => void) => void;
             openExternal: (url: string) => Promise<void>;
+            setAutoLaunch: (enabled: boolean) => Promise<void>;
+            getAutoLaunch: () => Promise<boolean>;
+            setPowerSaveBlocker: (enabled: boolean) => Promise<void>;
         };
     }
 }

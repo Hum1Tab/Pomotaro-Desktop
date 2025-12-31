@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, Tray, Menu, shell, powerSaveBlocker } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import DiscordRPC from 'discord-rpc';
@@ -189,6 +189,7 @@ if (!gotTheLock) {
         // Someone tried to run a second instance, we should focus our window.
         if (mainWindow) {
             if (mainWindow.isMinimized()) mainWindow.restore();
+            if (!mainWindow.isVisible()) mainWindow.show();
             mainWindow.focus();
         }
     });
@@ -317,5 +318,33 @@ ipcMain.handle('set-always-on-top', (_, flag) => {
 // 4. Restart App
 ipcMain.handle('restart-app', () => {
     autoUpdater.quitAndInstall(true, true);
+});
+
+// 5. Auto Launch Handler
+ipcMain.handle('set-auto-launch', (_, enabled) => {
+    app.setLoginItemSettings({
+        openAtLogin: enabled,
+    });
+});
+
+ipcMain.handle('get-auto-launch', () => {
+    return app.getLoginItemSettings().openAtLogin;
+});
+
+
+// 6. Power Save Blocker Handler
+let powerSaveBlockerId: number | null = null;
+
+ipcMain.handle('set-power-save-blocker', (_, enabled) => {
+    if (enabled) {
+        if (powerSaveBlockerId === null) {
+            powerSaveBlockerId = powerSaveBlocker.start('prevent-display-sleep');
+        }
+    } else {
+        if (powerSaveBlockerId !== null) {
+            powerSaveBlocker.stop(powerSaveBlockerId);
+            powerSaveBlockerId = null;
+        }
+    }
 });
 
