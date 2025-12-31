@@ -136,7 +136,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "include": "build/uninstaller.nsh"
+      "deleteAppDataOnUninstall": false
     }
   }
 }
