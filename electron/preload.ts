@@ -17,6 +17,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onUpdateError: (callback: (message: string) => void) => {
         ipcRenderer.on('update-error', (_, message) => callback(message));
     },
+    onUpdateDownloaded: (callback: () => void) => {
+        ipcRenderer.on('update-downloaded', () => callback());
+    },
+    restartApp: () => ipcRenderer.invoke('restart-app'),
     openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
 });
 

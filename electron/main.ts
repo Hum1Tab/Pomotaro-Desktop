@@ -116,28 +116,31 @@ function createWindow() {
     // Check for updates only in production
     if (app.isPackaged) {
         autoUpdater.on('checking-for-update', () => {
+            if (mainWindow?.isDestroyed()) return;
             mainWindow?.webContents.send('update-status', 'アップデートを確認中...');
         });
 
         autoUpdater.on('update-available', () => {
+            if (mainWindow?.isDestroyed()) return;
             mainWindow?.webContents.send('update-status', '新しいバージョンが見つかりました。ダウンロードを開始します...');
         });
 
+        // Modification: Do not quit automatically. Notify renderer to show button.
         autoUpdater.on('update-downloaded', () => {
-            mainWindow?.webContents.send('update-status', 'ダウンロード完了。再起動して更新します。');
-            // Give user a moment to see the message before restarting
-            setTimeout(() => {
-                autoUpdater.quitAndInstall(true, true);
-            }, 3000);
+            if (mainWindow?.isDestroyed()) return;
+            mainWindow?.webContents.send('update-status', 'ダウンロード完了。準備ができたら再起動してください。');
+            mainWindow?.webContents.send('update-downloaded');
         });
 
         autoUpdater.on('error', (err) => {
             console.error('Auto update error:', err);
+            if (mainWindow?.isDestroyed()) return;
             mainWindow?.webContents.send('update-error', `アップデートエラー: ${err.message}`);
         });
 
         autoUpdater.checkForUpdatesAndNotify().catch(err => {
             console.error('Check for updates failed:', err);
+            if (mainWindow?.isDestroyed()) return;
             mainWindow?.webContents.send('update-error', `アップデート確認失敗: ${err.message}`);
         });
     }
@@ -299,5 +302,10 @@ ipcMain.handle('set-always-on-top', (_, flag) => {
     if (mainWindow) {
         mainWindow.setAlwaysOnTop(flag);
     }
+});
+
+// 4. Restart App
+ipcMain.handle('restart-app', () => {
+    autoUpdater.quitAndInstall(true, true);
 });
 

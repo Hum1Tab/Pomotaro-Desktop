@@ -153,6 +153,7 @@ export default function Settings() {
                                                     appearanceSettings: appearanceSettings,
                                                     sessionHistory: sessions ? JSON.parse(sessions) : [],
                                                     tasks: tasks ? JSON.parse(tasks) : [],
+                                                    sessionsCompleted: localStorage.getItem('sessionsCompleted') || '0',
                                                     timestamp: new Date().toISOString()
                                                 };
                                                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -190,6 +191,9 @@ export default function Settings() {
                                                                 }
                                                                 if (data.tasks) {
                                                                     localStorage.setItem('pomodoroTasks', JSON.stringify(data.tasks));
+                                                                }
+                                                                if (data.sessionsCompleted) {
+                                                                    localStorage.setItem('sessionsCompleted', data.sessionsCompleted);
                                                                 }
 
                                                                 alert(t('settings.importSuccess'));

@@ -49,6 +49,17 @@ function App() {
       window.electronAPI.onUpdateError((message) => {
         toast.error(message);
       });
+
+      window.electronAPI.onUpdateDownloaded(() => {
+        toast("新しいバージョンが利用可能です", {
+          description: "再起動して更新を適用しますか？",
+          action: {
+            label: "再起動",
+            onClick: () => window.electronAPI?.restartApp(),
+          },
+          duration: Infinity, // Keep it visible
+        });
+      });
     }
   }, []);
 
@@ -90,6 +101,9 @@ declare global {
       onWindowStateChanged: (callback: (state: string) => void) => void;
       onUpdateStatus: (callback: (message: string) => void) => void;
       onUpdateError: (callback: (message: string) => void) => void;
+      onUpdateDownloaded: (callback: () => void) => void;
+      restartApp: () => Promise<void>;
+      openExternal: (url: string) => Promise<void>;
     };
   }
 }
