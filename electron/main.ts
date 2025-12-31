@@ -127,12 +127,15 @@ function createWindow() {
             mainWindow?.webContents.send('update-error', `アップデートエラー: ${err.message}`);
         });
 
-        autoUpdater.checkForUpdatesAndNotify().catch(err => {
-            console.error('Check for updates failed:', err);
-            if (mainWindow?.isDestroyed()) return;
-            mainWindow?.webContents.send('update-error', `アップデート確認失敗: ${err.message}`);
-        });
     }
+
+    ipcMain.handle('check-for-updates', () => {
+        if (app.isPackaged) {
+            return autoUpdater.checkForUpdatesAndNotify();
+        } else {
+            return Promise.resolve();
+        }
+    });
 
     // System Tray Implementation
     tray = new Tray(path.join(__dirname, '../icon.png'));

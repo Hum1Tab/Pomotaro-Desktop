@@ -260,6 +260,23 @@ export default function Settings() {
                                     </Button>
                                     <p className="text-xs text-muted-foreground text-center">{t('settings.support.desc')}</p>
                                 </div>
+
+                                {/* Update Section */}
+                                <div className="space-y-4 pt-4 border-t border-border/50">
+                                    <h3 className="text-lg font-medium">アップデート</h3>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full gap-2"
+                                        onClick={() => {
+                                            if (window.electronAPI?.checkForUpdates) {
+                                                window.electronAPI.checkForUpdates();
+                                            }
+                                        }}
+                                    >
+                                        <Download className="w-4 h-4" /> アップデートを確認
+                                    </Button>
+                                    <p className="text-xs text-muted-foreground text-center">v1.1.15</p>
+                                </div>
                             </div>
                         </TabsContent>
 

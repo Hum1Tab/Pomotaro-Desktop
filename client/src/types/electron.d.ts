@@ -16,10 +16,13 @@ declare global {
             onWindowStateChanged: (callback: (state: string) => void) => void;
             onUpdateStatus: (callback: (message: string) => void) => void;
             onUpdateError: (callback: (message: string) => void) => void;
+            onUpdateDownloaded: (callback: () => void) => void;
+            restartApp: () => Promise<void>;
             openExternal: (url: string) => Promise<void>;
             setAutoLaunch: (enabled: boolean) => Promise<void>;
             getAutoLaunch: () => Promise<boolean>;
             setPowerSaveBlocker: (enabled: boolean) => Promise<void>;
+            checkForUpdates: () => Promise<void>;
         };
     }
 }

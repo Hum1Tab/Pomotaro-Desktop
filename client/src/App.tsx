@@ -60,6 +60,11 @@ function App() {
           duration: Infinity, // Keep it visible
         });
       });
+
+      // Check for updates on startup (delayed slightly to ensure UI is ready)
+      setTimeout(() => {
+        window.electronAPI?.checkForUpdates();
+      }, 2000);
     }
   }, []);
 
@@ -104,6 +109,10 @@ declare global {
       onUpdateDownloaded: (callback: () => void) => void;
       restartApp: () => Promise<void>;
       openExternal: (url: string) => Promise<void>;
+      setAutoLaunch: (enabled: boolean) => Promise<void>;
+      getAutoLaunch: () => Promise<boolean>;
+      setPowerSaveBlocker: (enabled: boolean) => Promise<void>;
+      checkForUpdates: () => Promise<void>;
     };
   }
 }
