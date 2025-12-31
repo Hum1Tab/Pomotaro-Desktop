@@ -120,7 +120,7 @@
       "dist/public",
       "package.json",
       "icon.png",
-      "icon.ico"
+      "icon_release.ico"
     ],
     "publish": [
       {
@@ -131,7 +131,7 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "icon.ico"
+      "icon": "icon_release.ico"
     },
     "nsis": {
       "oneClick": false,
