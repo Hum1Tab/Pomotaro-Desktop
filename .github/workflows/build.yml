@@ -32,22 +32,8 @@ jobs:
         
       - name: Build Installer
         # GitHub Actions has no network restrictions, so we can let it rebuild if needed
-        run: npx electron-builder --win nsis -p never
-
-          
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-installer
-          path: |
-            release/*.exe
-            release/latest.yml
-          
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            release/*.exe
-            release/latest.yml
+        # -p always triggers the publish process defined in package.json
+        run: npx electron-builder --win nsis -p always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

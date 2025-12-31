@@ -99,18 +99,7 @@ function createWindow() {
         saveWindowState();
     });
 
-    // Save state on resize or move
-    mainWindow.on('resize', () => {
-        if (!mainWindow?.isMaximized()) {
-            saveWindowState();
-        }
-    });
 
-    mainWindow.on('move', () => {
-        if (!mainWindow?.isMaximized()) {
-            saveWindowState();
-        }
-    });
 
 
     // Check for updates only in production
@@ -191,10 +180,24 @@ app.on('before-quit', () => {
     saveWindowState();
 });
 
-app.whenReady().then(() => {
-    createWindow();
-    initDiscordRpc();
-});
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        // Someone tried to run a second instance, we should focus our window.
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+        }
+    });
+
+    app.whenReady().then(() => {
+        createWindow();
+        initDiscordRpc();
+    });
+}
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -241,7 +244,14 @@ function setActivity() {
 }
 
 // IPC Handlers
-ipcMain.handle('open-external', (_, url) => shell.openExternal(url));
+// IPC Handlers
+ipcMain.handle('open-external', (_, url) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return shell.openExternal(url);
+    }
+    console.warn('Blocked opening non-http url:', url);
+    return Promise.resolve();
+});
 
 // 1. Update Discord Activity
 ipcMain.handle('update-activity', (_, activity) => {
