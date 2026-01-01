@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 
 interface AddTaskFormProps {
@@ -36,15 +36,43 @@ export function AddTaskForm({ onAddTask }: AddTaskFormProps) {
                     onChange={(e) => setTitle(e.target.value)}
                     className="flex-1 rounded-lg border-2 border-border focus:border-primary focus:ring-0 bg-background text-foreground"
                 />
-                <Input
-                    type="number"
-                    min="1"
-                    max="20"
-                    value={estimatedPomodoros}
-                    onChange={(e) => setEstimatedPomodoros(parseInt(e.target.value) || 1)}
-                    className="w-16 sm:w-20 rounded-lg border-2 border-border focus:border-primary focus:ring-0 bg-background text-foreground text-center"
-                    title={t('tasks.estimated')}
-                />
+                <div className="flex items-center bg-secondary/20 rounded-lg p-1">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEstimatedPomodoros(Math.max(1, estimatedPomodoros - 1))}
+                        className="h-8 w-8 rounded-md hover:bg-background/50 hover:text-primary transition-colors"
+                    >
+                        <Minus className="w-3 h-3" />
+                    </Button>
+                    <div className="w-12 text-center">
+                        <Input
+                            ref={inputRef}
+                            type="number"
+                            min="1"
+                            max="20"
+                            value={estimatedPomodoros}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                if (!isNaN(val)) {
+                                    setEstimatedPomodoros(Math.max(1, Math.min(20, val)));
+                                }
+                            }}
+                            className="h-8 border-none bg-transparent text-center font-mono font-bold text-lg focus-visible:ring-0 px-0 [&::-webkit-inner-spin-button]:appearance-none"
+                            title={t('tasks.estimated')}
+                        />
+                    </div>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEstimatedPomodoros(Math.min(20, estimatedPomodoros + 1))}
+                        className="h-8 w-8 rounded-md hover:bg-background/50 hover:text-primary transition-colors"
+                    >
+                        <Plus className="w-3 h-3" />
+                    </Button>
+                </div>
                 <Button
                     type="submit"
                     className="bg-primary hover:bg-primary/90 text-primary-foreground px-4"

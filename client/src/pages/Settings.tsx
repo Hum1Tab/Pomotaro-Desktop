@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Palette, Image as ImageIcon, Video, Link, Volume2, Clock,
-    Layout, Maximize2, Minimize2, ChevronLeft, ArrowLeft, Upload, Download, Heart
+    Layout, Maximize2, Minimize2, ChevronLeft, ArrowLeft, Upload, Download, Heart,
+    Plus, Minus, Coffee, BrainCircuit
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -283,40 +284,123 @@ export default function Settings() {
                         {/* Timer Tab */}
                         <TabsContent value="timer" className="space-y-6 animate-fade-in">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-foreground">{t('settings.pomodoro')}</label>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            value={pomoSettings.pomodoroTime}
-                                            onChange={(e) => updatePomoSettings({ ...pomoSettings, pomodoroTime: Number(e.target.value) })}
-                                            className="font-mono text-lg"
-                                        />
-                                        <span className="text-sm text-muted-foreground">{t('common.minutes')}</span>
+                                {/* Pomodoro */}
+                                <div className="group relative p-6 rounded-3xl bg-secondary/10 border border-border/50 hover:border-primary/50 hover:bg-secondary/20 transition-all duration-300 flex flex-col items-center gap-4">
+                                    <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+                                        <BrainCircuit className="w-4 h-4" />
+                                        <span className="font-medium text-sm tracking-wide">{t('settings.pomodoro')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => updatePomoSettings({ ...pomoSettings, pomodoroTime: Math.max(1, pomoSettings.pomodoroTime - 1) })}
+                                            className="h-10 w-10 rounded-full bg-background/50 hover:bg-primary hover:text-primary-foreground border border-border/50 hover:border-primary transition-all"
+                                        >
+                                            <Minus className="w-4 h-4" />
+                                        </Button>
+                                        <div className="flex flex-col items-center w-24">
+                                            <Input
+                                                type="number"
+                                                value={pomoSettings.pomodoroTime}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value);
+                                                    if (!isNaN(val)) {
+                                                        updatePomoSettings({ ...pomoSettings, pomodoroTime: Math.max(1, val) });
+                                                    }
+                                                }}
+                                                className="text-5xl font-bold font-mono leading-none h-auto py-2 px-0 text-center w-full bg-transparent border-none shadow-none focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none cursor-pointer hover:opacity-80 transition-opacity"
+                                            />
+                                            <span className="text-xs text-muted-foreground uppercase font-medium tracking-wider">{t('common.minutes')}</span>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => updatePomoSettings({ ...pomoSettings, pomodoroTime: pomoSettings.pomodoroTime + 1 })}
+                                            className="h-10 w-10 rounded-full bg-background/50 hover:bg-primary hover:text-primary-foreground border border-border/50 hover:border-primary transition-all"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                        </Button>
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-foreground">{t('settings.shortBreak')}</label>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            value={pomoSettings.shortBreakTime}
-                                            onChange={(e) => updatePomoSettings({ ...pomoSettings, shortBreakTime: Number(e.target.value) })}
-                                            className="font-mono text-lg"
-                                        />
-                                        <span className="text-sm text-muted-foreground">{t('common.minutes')}</span>
+
+                                {/* Short Break */}
+                                <div className="group relative p-6 rounded-3xl bg-secondary/10 border border-border/50 hover:border-primary/50 hover:bg-secondary/20 transition-all duration-300 flex flex-col items-center gap-4">
+                                    <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+                                        <Coffee className="w-4 h-4" />
+                                        <span className="font-medium text-sm tracking-wide">{t('settings.shortBreak')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => updatePomoSettings({ ...pomoSettings, shortBreakTime: Math.max(1, pomoSettings.shortBreakTime - 1) })}
+                                            className="h-10 w-10 rounded-full bg-background/50 hover:bg-primary hover:text-primary-foreground border border-border/50 hover:border-primary transition-all"
+                                        >
+                                            <Minus className="w-4 h-4" />
+                                        </Button>
+                                        <div className="flex flex-col items-center w-24">
+                                            <Input
+                                                type="number"
+                                                value={pomoSettings.shortBreakTime}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value);
+                                                    if (!isNaN(val)) {
+                                                        updatePomoSettings({ ...pomoSettings, shortBreakTime: Math.max(1, val) });
+                                                    }
+                                                }}
+                                                className="text-5xl font-bold font-mono leading-none h-auto py-2 px-0 text-center w-full bg-transparent border-none shadow-none focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none cursor-pointer hover:opacity-80 transition-opacity"
+                                            />
+                                            <span className="text-xs text-muted-foreground uppercase font-medium tracking-wider">{t('common.minutes')}</span>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => updatePomoSettings({ ...pomoSettings, shortBreakTime: pomoSettings.shortBreakTime + 1 })}
+                                            className="h-10 w-10 rounded-full bg-background/50 hover:bg-primary hover:text-primary-foreground border border-border/50 hover:border-primary transition-all"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                        </Button>
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-foreground">{t('settings.longBreak')}</label>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            value={pomoSettings.longBreakTime}
-                                            onChange={(e) => updatePomoSettings({ ...pomoSettings, longBreakTime: Number(e.target.value) })}
-                                            className="font-mono text-lg"
-                                        />
-                                        <span className="text-sm text-muted-foreground">{t('common.minutes')}</span>
+
+                                {/* Long Break */}
+                                <div className="group relative p-6 rounded-3xl bg-secondary/10 border border-border/50 hover:border-primary/50 hover:bg-secondary/20 transition-all duration-300 flex flex-col items-center gap-4">
+                                    <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+                                        <Clock className="w-4 h-4" />
+                                        <span className="font-medium text-sm tracking-wide">{t('settings.longBreak')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => updatePomoSettings({ ...pomoSettings, longBreakTime: Math.max(1, pomoSettings.longBreakTime - 1) })}
+                                            className="h-10 w-10 rounded-full bg-background/50 hover:bg-primary hover:text-primary-foreground border border-border/50 hover:border-primary transition-all"
+                                        >
+                                            <Minus className="w-4 h-4" />
+                                        </Button>
+                                        <div className="flex flex-col items-center w-24">
+                                            <Input
+                                                type="number"
+                                                value={pomoSettings.longBreakTime}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value);
+                                                    if (!isNaN(val)) {
+                                                        updatePomoSettings({ ...pomoSettings, longBreakTime: Math.max(1, val) });
+                                                    }
+                                                }}
+                                                className="text-5xl font-bold font-mono leading-none h-auto py-2 px-0 text-center w-full bg-transparent border-none shadow-none focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none cursor-pointer hover:opacity-80 transition-opacity"
+                                            />
+                                            <span className="text-xs text-muted-foreground uppercase font-medium tracking-wider">{t('common.minutes')}</span>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => updatePomoSettings({ ...pomoSettings, longBreakTime: pomoSettings.longBreakTime + 1 })}
+                                            className="h-10 w-10 rounded-full bg-background/50 hover:bg-primary hover:text-primary-foreground border border-border/50 hover:border-primary transition-all"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
