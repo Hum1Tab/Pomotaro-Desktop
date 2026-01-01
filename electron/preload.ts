@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
     updateActivity: (activity: any) => ipcRenderer.invoke('update-activity', activity),
+    clearActivity: () => ipcRenderer.invoke('clear-activity'),
     setProgressBar: (progress: number) => ipcRenderer.invoke('set-progress-bar', progress),
     setAlwaysOnTop: (flag: boolean) => ipcRenderer.invoke('set-always-on-top', flag),
     setWindowSize: (width: number, height: number) => ipcRenderer.invoke('set-window-size', width, height),

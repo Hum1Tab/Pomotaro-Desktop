@@ -11,6 +11,7 @@ declare global {
             setWindowSize: (width: number, height: number) => Promise<void>;
             toggleFullscreen: (flag: boolean) => Promise<void>;
             updateActivity: (activity: any) => Promise<void>;
+            clearActivity: () => Promise<void>;
             unmaximizeWindow: () => Promise<void>;
             isMaximized: () => Promise<boolean>;
             onWindowStateChanged: (callback: (state: string) => void) => void;
@@ -22,7 +23,7 @@ declare global {
             setAutoLaunch: (enabled: boolean) => Promise<void>;
             getAutoLaunch: () => Promise<boolean>;
             setPowerSaveBlocker: (enabled: boolean) => Promise<void>;
-            checkForUpdates: () => Promise<void>;
+            checkForUpdates: () => Promise<any>;
         };
     }
 }

@@ -267,6 +267,13 @@ ipcMain.handle('update-activity', (_, activity) => {
     }
 });
 
+// 1.5 Clear Discord Activity
+ipcMain.handle('clear-activity', () => {
+    if (rpc) {
+        rpc.clearActivity();
+    }
+});
+
 // 2. Set Taskbar Progress
 ipcMain.handle('set-progress-bar', (event, progress) => {
     if (mainWindow) {

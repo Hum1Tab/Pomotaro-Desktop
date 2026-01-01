@@ -42,7 +42,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
     rpcTextWorking: 'Pomotaro で作業中',
     rpcTextBreaking: '休憩中',
     rpcTextPaused: '一時停止中',
-    rpcTextCategoryWorkingSuffix: ' を共同学習中',
+    rpcTextCategoryWorkingSuffix: ' を学習中',
     rpcTextCategoryBreakingSuffix: ' の合間に休憩中',
 };
 
@@ -251,7 +251,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
                                 const currentCat = categories.find((c: any) => c.id === savedSelectedId);
                                 if (currentCat) {
                                     baseState = sessionType === 'pomodoro'
-                                        ? `${currentCat.name}${settings.rpcTextCategoryWorkingSuffix || ' を共同学習中'}`
+                                        ? `${currentCat.name}${settings.rpcTextCategoryWorkingSuffix || ' を学習中'}`
                                         : `${currentCat.name}${settings.rpcTextCategoryBreakingSuffix || ' の合間に休憩中'}`;
                                 }
                             } catch (e) {
@@ -269,7 +269,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
                     });
                 } else {
                     // If RPC is disabled but was previously enabled, we might want to clear it.
-                    // However, we don't have a direct "clear" yet, so we send a minimal activity or do nothing.
+                    window.electronAPI.clearActivity();
                 }
             } else {
                 window.electronAPI.setProgressBar(-1);

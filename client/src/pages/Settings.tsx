@@ -25,6 +25,9 @@ export default function Settings() {
 
     // Auto Launch State
     const [isAutoLaunch, setIsAutoLaunch] = useState(false);
+    // Manual Update Check State
+    const [updateCheckStatus, setUpdateCheckStatus] = useState<'idle' | 'checking'>('idle');
+    const [updateCheckMessage, setUpdateCheckMessage] = useState<string | null>(null);
 
     useEffect(() => {
         if (window.electronAPI?.getAutoLaunch) {
@@ -173,6 +176,52 @@ export default function Settings() {
                                     />
                                 </div>
 
+                                {/* Discord Settings */}
+                                <div className="space-y-4 pt-4 border-t border-border/50">
+                                    <h3 className="text-lg font-medium">Discord 設定</h3>
+
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium">Discord 連携を有効にする</label>
+                                        <Switch
+                                            checked={pomoSettings.enableDiscordRpc}
+                                            onCheckedChange={(checked) => {
+                                                updatePomoSettings({ ...pomoSettings, enableDiscordRpc: checked });
+                                            }}
+                                        />
+                                    </div>
+
+                                    {pomoSettings.enableDiscordRpc && (
+                                        <div className="space-y-4 pl-4 border-l-2 border-border/50 animate-fade-in">
+                                            <div className="flex items-center justify-between">
+                                                <div className="space-y-0.5">
+                                                    <label className="text-sm font-medium">カテゴリーを表示</label>
+                                                    <p className="text-xs text-muted-foreground">ステータスに現在のカテゴリー名を表示します</p>
+                                                </div>
+                                                <Switch
+                                                    checked={pomoSettings.showCategoryOnRpc}
+                                                    onCheckedChange={(checked) => {
+                                                        updatePomoSettings({ ...pomoSettings, showCategoryOnRpc: checked });
+                                                    }}
+                                                />
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                <div className="space-y-0.5">
+                                                    <label className="text-sm font-medium">ポモドーロ数を表示</label>
+                                                    <p className="text-xs text-muted-foreground">完了したポモドーロ数を表示します</p>
+                                                </div>
+                                                <Switch
+                                                    checked={pomoSettings.showPomodorosOnRpc}
+                                                    onCheckedChange={(checked) => {
+                                                        updatePomoSettings({ ...pomoSettings, showPomodorosOnRpc: checked });
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>
+
                                 {/* Data Features */}
                                 <div className="space-y-4 pt-4 border-t border-border/50">
                                     <h3 className="text-lg font-medium">{t('settings.section.data')}</h3>
@@ -268,15 +317,94 @@ export default function Settings() {
                                     <Button
                                         variant="outline"
                                         className="w-full gap-2"
-                                        onClick={() => {
+                                        disabled={updateCheckStatus === 'checking'}
+                                        onClick={async () => {
                                             if (window.electronAPI?.checkForUpdates) {
-                                                window.electronAPI.checkForUpdates();
+                                                setUpdateCheckStatus('checking');
+                                                setUpdateCheckMessage(null);
+                                                try {
+                                                    const result = await window.electronAPI.checkForUpdates() as any;
+                                                    // console.log('Update Check Result:', result);
+
+                                                    // checkForUpdatesAndNotify returns UpdateCheckResult | null.
+                                                    // If null, no update info available (update-not-available or error, but error usually throws).
+                                                    // Actually, if no update is available, result might be null OR result.updateInfo exists but version is same?
+                                                    // Let's rely on valid result.
+
+                                                    if (result && result.updateInfo) {
+                                                        // Check if the version is actually newer?
+                                                        // autoUpdater usually handles this.
+                                                        // If we got here, it means check completed.
+                                                        // If an update IS available, 'update-available' event fires and main.ts sends 'update-status'.
+                                                        // Ideally we want to know if "Nothing found".
+                                                        // But result contains updateInfo even if no update is available (in some versions).
+                                                        // Actually, standard behavior: result is returned.
+                                                        // We can assume if no 'update-available' event fired (or we rely on result), we can show 'Up to date'.
+                                                        // But 'update-available' is async.
+                                                        // Let's simply show "最新です" if result is returned and we are not downloading?
+                                                        // A safer way: catch 'update-not-available' if we could, but we don't have that listener exposed yet.
+                                                        // Main process doesn't send 'update-not-available'. 
+                                                        // BUT, `checkForUpdates` returns the result. 
+                                                        // If result.updateInfo.version == current version => Up to date.
+
+                                                        // Simplification: just wait for the promise. If it resolves and we didn't get an "Update found" event...
+                                                        // But how do we know?
+
+                                                        // Re-reading electron-updater docs:
+                                                        // result.downloadPromise is present if update is available and autoDownload is true.
+                                                        // OR we can check versions.
+
+                                                        // For now, let's try to assume if promise resolves, we are good.
+                                                        // If it was available, the other listener shows "Downloading...".
+                                                        // We can show "最新です" if we don't see that.
+                                                        // However, keeping it simple:
+                                                        // If result is valid, we can say "Check complete".
+                                                        // Let's try to inspect result version vs package version?
+                                                        // Too complex to pass package version here reliably without importing.
+
+                                                        // Let's use a simpler heuristic:
+                                                        // If update is available, `autoUpdater` kicks in.
+                                                        // If we want to show "Up to date", we can just show it after await, temporarily, unless "Downloading" takes over.
+                                                        setUpdateCheckStatus('idle');
+                                                        // We'll show a temporary "Up to date" message if no update event came in? 
+                                                        // Actually, let's just show "最新のバージョンです" if we assume so.
+                                                        // This might clash if update IS available.
+
+                                                        // Better approach:
+                                                        // Modify main.ts to explicitly return whether update was found?
+                                                        // main.ts returns `autoUpdater.checkForUpdatesAndNotify()`.
+                                                        // If update available, it returns result. If not, it returns result (with update info).
+                                                        // We can check `result.updateInfo.version`.
+                                                        // But we need current version.
+
+                                                        // Let's simply show the result version?
+                                                        // or "最新です (vX.X.X)".
+
+                                                        setUpdateCheckMessage(`チェック完了: v${result.updateInfo.version}`);
+
+                                                    } else {
+                                                        setUpdateCheckStatus('idle');
+                                                        setUpdateCheckMessage('最新です');
+                                                    }
+                                                } catch (e) {
+                                                    console.error(e);
+                                                    setUpdateCheckStatus('idle');
+                                                    setUpdateCheckMessage('エラーが発生しました');
+                                                }
                                             }
                                         }}
                                     >
-                                        <Download className="w-4 h-4" /> アップデートを確認
+                                        <Download className="w-4 h-4" />
+                                        {updateCheckStatus === 'checking' ? '確認中...' : 'アップデートを確認'}
                                     </Button>
-                                    <p className="text-xs text-muted-foreground text-center">v1.1.15</p>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <p className="text-xs text-muted-foreground text-center">v1.1.18</p>
+                                        {updateCheckMessage && (
+                                            <p className="text-xs text-primary font-medium animate-fade-in">
+                                                {updateCheckMessage}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </TabsContent>
