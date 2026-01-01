@@ -104,10 +104,7 @@ function createWindow() {
 
     // Check for updates only in production
     if (app.isPackaged) {
-        autoUpdater.on('checking-for-update', () => {
-            if (mainWindow?.isDestroyed()) return;
-            mainWindow?.webContents.send('update-status', 'アップデートを確認中...');
-        });
+
 
         autoUpdater.on('update-available', () => {
             if (mainWindow?.isDestroyed()) return;
