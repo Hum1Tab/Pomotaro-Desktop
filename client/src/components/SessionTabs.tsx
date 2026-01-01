@@ -1,5 +1,7 @@
 import { SessionType } from '@/hooks/usePomodoro';
 import { useLanguage } from '@/hooks/useLanguage';
+import { motion } from 'framer-motion';
+import { Pencil, Coffee, Clock } from 'lucide-react';
 
 interface SessionTabsProps {
     currentSession: SessionType;
@@ -9,26 +11,39 @@ interface SessionTabsProps {
 export function SessionTabs({ currentSession, onSessionChange }: SessionTabsProps) {
     const { t } = useLanguage();
 
-    const tabs: { type: SessionType; label: string }[] = [
-        { type: 'pomodoro', label: t('timer.pomodoro') },
-        { type: 'shortBreak', label: t('timer.shortBreak') },
-        { type: 'longBreak', label: t('timer.longBreak') },
+    const tabs: { type: SessionType; label: string; icon: React.ElementType }[] = [
+        { type: 'pomodoro', label: t('timer.pomodoro'), icon: Pencil },
+        { type: 'shortBreak', label: t('timer.shortBreak'), icon: Coffee },
+        { type: 'longBreak', label: t('timer.longBreak'), icon: Clock },
     ];
 
     return (
-        <div className="flex gap-2 justify-center">
-            {tabs.map((tab) => (
-                <button
-                    key={tab.type}
-                    onClick={() => onSessionChange(tab.type)}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-all ${currentSession === tab.type
-                        ? 'bg-primary text-primary-foreground shadow-md scale-105'
-                        : 'bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
-                        }`}
-                >
-                    {tab.label}
-                </button>
-            ))}
+        <div className="flex p-1 bg-black/20 backdrop-blur-lg rounded-full border border-white/10 shadow-inner">
+            {tabs.map((tab) => {
+                const isActive = currentSession === tab.type;
+                const Icon = tab.icon;
+
+                return (
+                    <button
+                        key={tab.type}
+                        onClick={() => onSessionChange(tab.type)}
+                        className={`
+                            relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 z-10
+                            ${isActive ? 'text-primary-foreground' : 'text-white/60 hover:text-white/90 hover:bg-white/5'}
+                        `}
+                    >
+                        {isActive && (
+                            <motion.div
+                                layoutId="activeTab"
+                                className="absolute inset-0 bg-primary shadow-lg rounded-full -z-10"
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            />
+                        )}
+                        <Icon className="w-4 h-4" />
+                        <span className="hidden sm:inline">{tab.label}</span>
+                    </button>
+                );
+            })}
         </div>
     );
 }

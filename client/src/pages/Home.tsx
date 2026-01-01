@@ -343,6 +343,14 @@ export default function Home() {
                   <Waves className={`w-6 h-6 ${isNoisePlaying ? 'animate-pulse' : ''}`} />
                 </Button>
 
+                {/* Session Tabs */}
+                <div className="mb-8 scale-90 sm:scale-100 transition-transform">
+                  <SessionTabs
+                    currentSession={pomodoro.sessionType}
+                    onSessionChange={pomodoro.switchSession}
+                  />
+                </div>
+
                 {/* Timer Display */}
                 <div className="mb-12">
                   <TimerDisplay

@@ -12,8 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Palette, Image as ImageIcon, Video, Link, Volume2, Clock,
     Layout, Maximize2, Minimize2, ChevronLeft, ArrowLeft, Upload, Download, Heart,
-    Plus, Minus, Coffee, BrainCircuit
+    Plus, Minus, Coffee, Pencil
 } from 'lucide-react';
+
+
 import { useEffect, useState } from 'react';
 
 export default function Settings() {
@@ -415,7 +417,7 @@ export default function Settings() {
                                 {/* Pomodoro */}
                                 <div className="group relative p-6 rounded-3xl bg-secondary/10 border border-border/50 hover:border-primary/50 hover:bg-secondary/20 transition-all duration-300 flex flex-col items-center gap-4">
                                     <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
-                                        <BrainCircuit className="w-4 h-4" />
+                                        <Pencil className="w-4 h-4" />
                                         <span className="font-medium text-sm tracking-wide">{t('settings.pomodoro')}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
