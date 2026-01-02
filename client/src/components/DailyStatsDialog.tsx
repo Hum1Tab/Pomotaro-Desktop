@@ -5,6 +5,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { useMemo } from 'react';
 import { SessionRecord, DailyStats, useSessionHistory } from '../hooks/useSessionHistory';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useStudyCategories } from '@/hooks/useStudyCategories';
@@ -24,6 +25,14 @@ const COLORS = ['#E8644A', '#8B9D83', '#E8A84A', '#4A90E2', '#9B59B6', '#34495E'
 export function DailyStatsDialog({ isOpen, onClose, stats, dateStr }: DailyStatsDialogProps) {
     const { t } = useLanguage();
     const { categories } = useStudyCategories();
+
+    // Create O(1) category lookup map
+    const categoryMap = useMemo(() => {
+        return categories.reduce((acc, cat) => {
+            acc[cat.id] = cat;
+            return acc;
+        }, {} as Record<string, typeof categories[0]>);
+    }, [categories]);
 
     if (!isOpen) return null; // Added this line
 
@@ -52,16 +61,20 @@ export function DailyStatsDialog({ isOpen, onClose, stats, dateStr }: DailyStats
     const focusSessions = sessions.filter(s => s.sessionType === 'pomodoro');
 
     // Aggregate by category
-    const categoryStats = focusSessions.reduce((acc: Record<string, number>, session: SessionRecord) => { // Added SessionRecord type
-        const name = session.categoryName || 'Uncategorized';
-        acc[name] = (acc[name] || 0) + session.duration;
-        return acc;
-    }, {} as Record<string, number>);
+    const categoryStats = useMemo(() => {
+        return focusSessions.reduce((acc: Record<string, number>, session: SessionRecord) => {
+            const name = session.categoryName || 'Uncategorized';
+            acc[name] = (acc[name] || 0) + session.duration;
+            return acc;
+        }, {} as Record<string, number>);
+    }, [focusSessions]);
 
-    const pieData = Object.entries(categoryStats).map(([name, value]: [string, unknown]) => ({
-        name,
-        value: Math.round((value as number) / 60), // minutes
-    })).sort((a, b) => b.value - a.value);
+    const pieData = useMemo(() => {
+        return Object.entries(categoryStats).map(([name, value]: [string, unknown]) => ({
+            name,
+            value: Math.round((value as number) / 60), // minutes
+        })).sort((a, b) => b.value - a.value);
+    }, [categoryStats]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -137,7 +150,7 @@ export function DailyStatsDialog({ isOpen, onClose, stats, dateStr }: DailyStats
                                             <div className="flex items-center gap-3">
                                                 <div className="text-xl">
                                                     {(() => {
-                                                        const category = categories.find(c => c.id === session.categoryId);
+                                                        const category = session.categoryId ? categoryMap[session.categoryId] : undefined;
                                                         return category ? category.icon : '🍅';
                                                     })()}
                                                 </div>

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import {
     BarChart,
     Bar,
@@ -12,7 +12,7 @@ import { useSessionHistory } from '@/hooks/useSessionHistory';
 import { useTheme } from '@/hooks/useTheme';
 import { useLanguage } from '@/hooks/useLanguage';
 
-export function WeeklyChart() {
+export const WeeklyChart = memo(function WeeklyChart() {
     const { getWeeklyStats } = useSessionHistory();
     const { theme } = useTheme();
     const { t } = useLanguage();
@@ -83,4 +83,4 @@ export function WeeklyChart() {
             </div>
         </div>
     );
-}
+});

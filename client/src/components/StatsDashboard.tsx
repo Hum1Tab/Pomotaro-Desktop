@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { useSessionHistory } from '@/hooks/useSessionHistory';
 import { useStudyCategories } from '@/hooks/useStudyCategories';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useLanguage } from '@/hooks/useLanguage';
 
-export function StatsDashboard() {
+export const StatsDashboard = memo(function StatsDashboard() {
   const history = useSessionHistory();
   const { t } = useLanguage();
   const { categories } = useStudyCategories();
@@ -20,6 +20,14 @@ export function StatsDashboard() {
   const monthlyStats = history.getMonthlyStats(selectedYear, selectedMonth);
   const yearlyStats = history.getYearlyStats(selectedYear);
 
+  // Pre-compute category map for O(1) lookup
+  const categoryMap = useMemo(() => {
+    return categories.reduce((acc, cat) => {
+      acc[cat.id] = cat;
+      return acc;
+    }, {} as Record<string, typeof categories[0]>);
+  }, [categories]);
+
   // Calculate category-based statistics
   const categoryStats = useMemo(() => {
     const stats: Record<string, { name: string; focusTime: number; color: string }> = {};
@@ -29,7 +37,7 @@ export function StatsDashboard() {
       .forEach((session) => {
         const categoryId = session.categoryId!;
         if (!stats[categoryId]) {
-          const category = categories.find((c) => c.id === categoryId);
+          const category = categoryMap[categoryId];
           stats[categoryId] = {
             name: session.categoryName || 'Unknown',
             focusTime: 0,
@@ -40,7 +48,7 @@ export function StatsDashboard() {
       });
 
     return Object.values(stats);
-  }, [history.sessions, categories]);
+  }, [history.sessions, categoryMap]);
 
   // Format time for display
   const formatTime = (seconds: number) => {
@@ -303,4 +311,4 @@ export function StatsDashboard() {
       )}
     </div>
   );
-}
+});

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Task } from '@/hooks/useTasks';
 import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
@@ -10,7 +11,7 @@ interface TaskListProps {
     onDeleteTask: (id: string) => void;
 }
 
-export function TaskList({ tasks, onToggleComplete, onDeleteTask }: TaskListProps) {
+export const TaskList = memo(function TaskList({ tasks, onToggleComplete, onDeleteTask }: TaskListProps) {
     const { playClickSound, playSuccessSound } = useSound();
 
     const handleToggle = (id: string, completed: boolean) => {
@@ -86,4 +87,4 @@ export function TaskList({ tasks, onToggleComplete, onDeleteTask }: TaskListProp
             ))}
         </div>
     );
-}
+});

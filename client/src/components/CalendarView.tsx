@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSessionHistory } from '../hooks/useSessionHistory'; // Corrected Relative import
 import { useStudyCategories } from '@/hooks/useStudyCategories';
 
@@ -47,14 +47,60 @@ export function CalendarView() {
     return `${minutes}m`;
   };
 
+  // Pre-calculate daily metadata (color, intensity) to avoid loop in render
+  // Complexity: O(Days * SessionsPerDay) -> done once per month change
+  const dayMetadataMap = useMemo(() => {
+    const map: Record<string, { dominantColor?: string; intensityColor: string; pomodoroCount: number; focusTime: number }> = {};
 
-  const getIntensityColor = (focusTime: number) => {
-    if (focusTime === 0) return 'bg-secondary/30';
-    if (focusTime < 30 * 60) return 'bg-primary/20';
-    if (focusTime < 60 * 60) return 'bg-primary/40';
-    if (focusTime < 120 * 60) return 'bg-primary/60';
-    return 'bg-primary/80';
-  };
+    // Create a category lookup for O(1) access
+    const catMap = categories.reduce((acc, cat) => {
+      acc[cat.id] = cat;
+      return acc;
+    }, {} as Record<string, typeof categories[0]>);
+
+    // Iterate over stats
+    Object.entries(monthlyStats).forEach(([dateStr, dayStats]) => {
+      const focusTime = dayStats.totalFocusTime;
+      const pomodoroCount = dayStats.pomodoroCount;
+
+      // Calculate intensity
+      let intensityColor = 'bg-secondary/30';
+      if (focusTime > 0) {
+        if (focusTime < 30 * 60) intensityColor = 'bg-primary/20';
+        else if (focusTime < 60 * 60) intensityColor = 'bg-primary/40';
+        else if (focusTime < 120 * 60) intensityColor = 'bg-primary/60';
+        else intensityColor = 'bg-primary/80';
+      }
+
+      // Calculate dominant color
+      let dominantColor: string | undefined = undefined;
+      if (dayStats.sessions && dayStats.sessions.length > 0) {
+        const categoryDurations: Record<string, number> = {};
+        dayStats.sessions.forEach((session) => {
+          if (session.sessionType === 'pomodoro' && session.categoryId) {
+            categoryDurations[session.categoryId] = (categoryDurations[session.categoryId] || 0) + session.duration;
+          }
+        });
+
+        let maxDuration = 0;
+        let topCategoryId: string | null = null;
+        Object.entries(categoryDurations).forEach(([catId, duration]) => {
+          if (duration > maxDuration) {
+            maxDuration = duration;
+            topCategoryId = catId;
+          }
+        });
+
+        if (topCategoryId && catMap[topCategoryId]) {
+          dominantColor = catMap[topCategoryId].color;
+        }
+      }
+
+      map[dateStr] = { dominantColor, intensityColor, pomodoroCount, focusTime };
+    });
+
+    return map;
+  }, [monthlyStats, categories]);
 
   const handleDayClick = (dateStr: string) => {
     setSelectedDate(dateStr);
@@ -121,36 +167,9 @@ export function CalendarView() {
             }
 
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayStats = monthlyStats[dateStr]; // DailyStats or undefined
-            const focusTime = dayStats?.totalFocusTime || 0;
+            const metadata = dayMetadataMap[dateStr] || { focusTime: 0, pomodoroCount: 0, intensityColor: 'bg-secondary/30' };
+            const { focusTime, pomodoroCount, dominantColor, intensityColor } = metadata;
             const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
-
-            let dominantColor: string | undefined = undefined;
-
-            if (dayStats && dayStats.sessions) {
-              const categoryDurations: Record<string, number> = {};
-              dayStats.sessions.forEach((session: any) => {
-                if (session.sessionType === 'pomodoro' && session.categoryId) {
-                  categoryDurations[session.categoryId] = (categoryDurations[session.categoryId] || 0) + session.duration;
-                }
-              });
-
-              let maxDuration = 0;
-              let topCategoryId: string | null = null;
-              Object.entries(categoryDurations).forEach(([catId, duration]) => {
-                if (duration > maxDuration) {
-                  maxDuration = duration;
-                  topCategoryId = catId;
-                }
-              });
-
-              if (topCategoryId) {
-                const category = categories.find(c => c.id === topCategoryId);
-                if (category) {
-                  dominantColor = category.color;
-                }
-              }
-            }
 
             return (
               <div
@@ -165,7 +184,7 @@ export function CalendarView() {
               >
                 {/* Background "Fill" style for intensity if no specific category, or simple highlight */}
                 {!dominantColor && focusTime > 0 && (
-                  <div className={`absolute inset-0 rounded-xl opacity-20 ${getIntensityColor(focusTime)}`} />
+                  <div className={`absolute inset-0 rounded-xl opacity-20 ${intensityColor}`} />
                 )}
 
                 <div className={`text-sm font-bold z-10 ${dominantColor ? '' : 'text-foreground'}`}>
@@ -174,7 +193,7 @@ export function CalendarView() {
 
                 {focusTime > 0 && (
                   <div className="z-10 text-[10px] font-medium text-right opacity-80">
-                    {dayStats?.pomodoroCount || 0}
+                    {pomodoroCount}
                     <span className="text-[8px] ml-0.5">🍅</span>
                   </div>
                 )}
