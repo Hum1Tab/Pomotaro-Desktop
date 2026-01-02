@@ -12,19 +12,50 @@ import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 
 
-import { Router as WouterRouter, Route, Switch } from "wouter";
+import { useLocation, Router as WouterRouter, Route, Switch } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
+import { AnimatePresence, motion } from "framer-motion";
+
+// Helper to freeze the location for the exiting component
+// This ensures that the 'Switch' inside the exiting motion.div
+// continues to render the OLD route instead of switching to the NEW route
+const FrozenRouter = ({ children, location, navigate }: { children: React.ReactNode; location: string, navigate: (to: string, options?: any) => void }) => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const staticHook = () => [location, navigate] as [string, (to: string, options?: any) => void];
+  return <WouterRouter hook={staticHook}>{children}</WouterRouter>;
+};
+
+function AnimatedRoutes() {
+  const [location, navigate] = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.2 }}
+        className="w-full h-full"
+      >
+        <FrozenRouter location={location} navigate={navigate}>
+          <Switch>
+            <Route path={"/"} component={Home} />
+            <Route path={"/settings"} component={Settings} />
+            <Route path={"/404"} component={NotFound} />
+            {/* Final fallback route */}
+            <Route component={NotFound} />
+          </Switch>
+        </FrozenRouter>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
 
 function Router() {
   return (
     <WouterRouter hook={useHashLocation}>
-      <Switch>
-        <Route path={"/"} component={Home} />
-        <Route path={"/settings"} component={Settings} />
-        <Route path={"/404"} component={NotFound} />
-        {/* Final fallback route */}
-        <Route component={NotFound} />
-      </Switch>
+      <AnimatedRoutes />
     </WouterRouter>
   );
 }

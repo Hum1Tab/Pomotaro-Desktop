@@ -34,7 +34,7 @@ export function DailyStatsDialog({ isOpen, onClose, stats, dateStr }: DailyStats
         }, {} as Record<string, typeof categories[0]>);
     }, [categories]);
 
-    if (!isOpen) return null; // Added this line
+
 
     const formatDuration = (seconds: number) => {
         const hours = Math.floor(seconds / 3600);

@@ -92,25 +92,25 @@ export const StatsDashboard = memo(function StatsDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4 bg-card shadow-warm">
+        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
           <div className="text-xs sm:text-sm text-muted-foreground">{t('stats.totalFocus')}</div>
           <div className="text-xl sm:text-2xl font-bold text-primary mt-2">
             {formatTime(totalStats.totalFocusTime)}
           </div>
         </Card>
-        <Card className="p-4 bg-card shadow-warm">
+        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
           <div className="text-xs sm:text-sm text-muted-foreground">{t('stats.totalPomodoros')}</div>
           <div className="text-xl sm:text-2xl font-bold text-primary mt-2">
             {totalStats.pomodoroCount}
           </div>
         </Card>
-        <Card className="p-4 bg-card shadow-warm">
+        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
           <div className="text-xs sm:text-sm text-muted-foreground">{t('stats.totalBreak')}</div>
           <div className="text-xl sm:text-2xl font-bold text-accent-foreground mt-2">
             {formatTime(totalStats.totalBreakTime)}
           </div>
         </Card>
-        <Card className="p-4 bg-card shadow-warm">
+        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
           <div className="text-xs sm:text-sm text-muted-foreground">{t('stats.todaysFocus')}</div>
           <div className="text-xl sm:text-2xl font-bold text-primary mt-2">
             {formatTime(dailyStats.totalFocusTime)}
@@ -127,7 +127,7 @@ export const StatsDashboard = memo(function StatsDashboard() {
         </TabsList>
 
         <TabsContent value="day" className="space-y-4">
-          <Card className="p-4 bg-card shadow-warm">
+          <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
             <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.todaysSessions')}</h3>
             <div className="space-y-2">
               {dailyStats.sessions.length === 0 ? (
@@ -145,87 +145,90 @@ export const StatsDashboard = memo(function StatsDashboard() {
         </TabsContent>
 
         <TabsContent value="week" className="space-y-4">
-          <Card className="p-4 bg-card shadow-warm">
+          <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
             <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.weeklyFocus')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={weeklyChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E8DED0" />
-                <XAxis dataKey="date" stroke="#6B6560" />
-                <YAxis stroke="#6B6560" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'var(--card)',
-                    borderColor: 'var(--border)',
+                    backgroundColor: 'hsl(var(--card))',
+                    borderColor: 'hsl(var(--border))',
                     borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    color: 'hsl(var(--foreground))'
                   }}
-                  itemStyle={{ color: 'var(--foreground)' }}
-                  labelStyle={{ color: 'var(--muted-foreground)' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                   isAnimationActive={false}
-                  cursor={{ fill: 'var(--accent)', opacity: 0.2 }}
+                  cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
                 />
-                <Legend />
-                <Bar dataKey="focusTime" fill="#E8644A" name="Focus (min)" />
+                <Legend iconType="circle" />
+                <Bar dataKey="focusTime" fill="hsl(var(--primary))" name="Focus (min)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
         </TabsContent>
 
         <TabsContent value="month" className="space-y-4">
-          <Card className="p-4 bg-card shadow-warm">
+          <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
             <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.monthlyFocus')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={monthlyChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E8DED0" />
-                <XAxis dataKey="date" stroke="#6B6560" />
-                <YAxis stroke="#6B6560" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'var(--card)',
-                    borderColor: 'var(--border)',
+                    backgroundColor: 'hsl(var(--card))',
+                    borderColor: 'hsl(var(--border))',
                     borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    color: 'hsl(var(--foreground))'
                   }}
-                  itemStyle={{ color: 'var(--foreground)' }}
-                  labelStyle={{ color: 'var(--muted-foreground)' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                   isAnimationActive={false}
                 />
-                <Legend />
-                <Line type="monotone" dataKey="focusTime" stroke="#E8644A" name="Focus (min)" />
+                <Legend iconType="circle" />
+                <Line type="monotone" dataKey="focusTime" stroke="hsl(var(--primary))" name="Focus (min)" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
               </LineChart>
             </ResponsiveContainer>
           </Card>
         </TabsContent>
 
         <TabsContent value="year" className="space-y-4">
-          <Card className="p-4 bg-card shadow-warm">
+          <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
             <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.yearlyFocus')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={yearlyChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E8DED0" />
-                <XAxis dataKey="month" stroke="#6B6560" />
-                <YAxis stroke="#6B6560" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'var(--card)',
-                    borderColor: 'var(--border)',
+                    backgroundColor: 'hsl(var(--card))',
+                    borderColor: 'hsl(var(--border))',
                     borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    color: 'hsl(var(--foreground))'
                   }}
-                  itemStyle={{ color: 'var(--foreground)' }}
-                  labelStyle={{ color: 'var(--muted-foreground)' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                   isAnimationActive={false}
-                  cursor={{ fill: 'var(--accent)', opacity: 0.2 }}
+                  cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
                 />
-                <Legend />
-                <Bar dataKey="focusTime" fill="#E8644A" name="Focus (min)" />
+                <Legend iconType="circle" />
+                <Bar dataKey="focusTime" fill="hsl(var(--primary))" name="Focus (min)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
         </TabsContent>
       </Tabs>
 
-      <Card className="p-4 bg-card shadow-warm">
+      <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
         <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.focusVsBreak')}</h3>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -245,12 +248,13 @@ export const StatsDashboard = memo(function StatsDashboard() {
             </Pie>
             <Tooltip
               contentStyle={{
-                backgroundColor: 'var(--card)',
-                borderColor: 'var(--border)',
+                backgroundColor: 'hsl(var(--card))',
+                borderColor: 'hsl(var(--border))',
                 borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                color: 'hsl(var(--foreground))'
               }}
-              itemStyle={{ color: 'var(--foreground)' }}
+              itemStyle={{ color: 'hsl(var(--foreground))' }}
               isAnimationActive={false}
             />
           </PieChart>
@@ -259,7 +263,7 @@ export const StatsDashboard = memo(function StatsDashboard() {
 
       {/* Category Statistics */}
       {categoryPieData.length > 0 && (
-        <Card className="p-4 bg-card shadow-warm">
+        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
           <h3 className="text-sm font-semibold text-foreground mb-4">カテゴリー別学習時間</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -279,12 +283,13 @@ export const StatsDashboard = memo(function StatsDashboard() {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  borderColor: 'var(--border)',
+                  backgroundColor: 'hsl(var(--card))',
+                  borderColor: 'hsl(var(--border))',
                   borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  color: 'hsl(var(--foreground))'
                 }}
-                itemStyle={{ color: 'var(--foreground)' }}
+                itemStyle={{ color: 'hsl(var(--foreground))' }}
                 isAnimationActive={false}
               />
             </PieChart>

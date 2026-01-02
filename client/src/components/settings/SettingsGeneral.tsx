@@ -283,7 +283,7 @@ export function SettingsGeneral() {
                     {updateCheckStatus === 'checking' ? '確認中...' : 'アップデートを確認'}
                 </Button>
                 <div className="flex flex-col items-center gap-1">
-                    <p className="text-xs text-muted-foreground text-center">v1.1.18</p>
+
                     {updateCheckMessage && (
                         <p className="text-xs text-primary font-medium animate-fade-in">
                             {updateCheckMessage}

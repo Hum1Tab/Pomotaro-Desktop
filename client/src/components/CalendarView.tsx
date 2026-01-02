@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DailyStatsDialog } from '@/components/DailyStatsDialog';
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 export function CalendarView() {
   const history = useSessionHistory();
   const { categories } = useStudyCategories();
@@ -14,6 +16,7 @@ export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [direction, setDirection] = useState(0);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -26,10 +29,12 @@ export function CalendarView() {
   const monthlyStats = history.getMonthlyStats(year, month);
 
   const handlePrevMonth = () => {
+    setDirection(-1);
     setCurrentDate(new Date(year, month - 1));
   };
 
   const handleNextMonth = () => {
+    setDirection(1);
     setCurrentDate(new Date(year, month + 1));
   };
 
@@ -120,6 +125,21 @@ export function CalendarView() {
     calendarDays.push(day);
   }
 
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 20 : -20,
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? -20 : 20,
+      opacity: 0
+    })
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -146,8 +166,8 @@ export function CalendarView() {
         </div>
       </div>
 
-      <Card className="p-6 bg-card/30 border-2 shadow-none rounded-xl">
-        <div className="grid grid-cols-7 gap-2 sm:gap-3">
+      <Card className="p-6 bg-card/30 border-2 shadow-none rounded-xl overflow-hidden">
+        <div className="grid grid-cols-7 gap-2 sm:gap-3 mb-2">
           {/* Week day headers */}
           {weekDays.map((day) => (
             <div
@@ -157,51 +177,63 @@ export function CalendarView() {
               {day}
             </div>
           ))}
-
-          {/* Calendar days */}
-          {calendarDays.map((day, index) => {
-            if (!day) {
-              return (
-                <div key={`empty-${index}`} className="aspect-square p-2" />
-              );
-            }
-
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const metadata = dayMetadataMap[dateStr] || { focusTime: 0, pomodoroCount: 0, intensityColor: 'bg-secondary/30' };
-            const { focusTime, pomodoroCount, dominantColor, intensityColor } = metadata;
-            const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
-
-            return (
-              <div
-                key={day}
-                onClick={() => handleDayClick(dateStr)}
-                className={`aspect-square p-1 sm:p-2 rounded-xl border-2 transition-all relative group cursor-pointer flex flex-col justify-between
-                  ${isToday ? 'ring-2 ring-primary border-primary' : 'border-transparent hover:border-primary/50'}
-                  ${dominantColor ? 'bg-card' : 'hover:bg-card/50'}
-                `}
-                style={dominantColor ? { borderColor: dominantColor, color: dominantColor } : undefined}
-                title={`${day}: ${formatTime(focusTime)}`}
-              >
-                {/* Background "Fill" style for intensity if no specific category, or simple highlight */}
-                {!dominantColor && focusTime > 0 && (
-                  <div className={`absolute inset-0 rounded-xl opacity-20 ${intensityColor}`} />
-                )}
-
-                <div className={`text-sm font-bold z-10 ${dominantColor ? '' : 'text-foreground'}`}>
-                  {day}
-                </div>
-
-                {focusTime > 0 && (
-                  <div className="z-10 text-[10px] font-medium text-right opacity-80">
-                    {pomodoroCount}
-                    <span className="text-[8px] ml-0.5">🍅</span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
         </div>
+
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={currentDate.toString()}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ type: "spring", stiffness: 300, damping: 30, opacity: { duration: 0.2 } }}
+            className="grid grid-cols-7 gap-2 sm:gap-3"
+          >
+            {/* Calendar days */}
+            {calendarDays.map((day, index) => {
+              if (!day) {
+                return (
+                  <div key={`empty-${index}`} className="aspect-square p-2" />
+                );
+              }
+
+              const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const metadata = dayMetadataMap[dateStr] || { focusTime: 0, pomodoroCount: 0, intensityColor: 'bg-secondary/30' };
+              const { focusTime, pomodoroCount, dominantColor, intensityColor } = metadata;
+              const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+
+              return (
+                <div
+                  key={day}
+                  onClick={() => handleDayClick(dateStr)}
+                  className={`aspect-square p-1 sm:p-2 rounded-xl border-2 transition-all relative group cursor-pointer flex flex-col justify-between
+                    ${isToday ? 'ring-2 ring-primary border-primary' : 'border-transparent hover:border-primary/50'}
+                    ${dominantColor ? 'bg-card' : 'hover:bg-card/50'}
+                  `}
+                  style={dominantColor ? { borderColor: dominantColor, color: dominantColor } : undefined}
+                  title={`${day}: ${formatTime(focusTime)}`}
+                >
+                  {/* Background "Fill" style for intensity if no specific category, or simple highlight */}
+                  {!dominantColor && focusTime > 0 && (
+                    <div className={`absolute inset-0 rounded-xl opacity-20 ${intensityColor}`} />
+                  )}
+
+                  <div className={`text-sm font-bold z-10 ${dominantColor ? '' : 'text-foreground'}`}>
+                    {day}
+                  </div>
+
+                  {focusTime > 0 && (
+                    <div className="z-10 text-[10px] font-medium text-right opacity-80">
+                      {pomodoroCount}
+                      <span className="text-[8px] ml-0.5">🍅</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
