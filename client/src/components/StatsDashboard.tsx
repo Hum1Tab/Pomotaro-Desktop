@@ -58,11 +58,34 @@ export const StatsDashboard = memo(function StatsDashboard() {
   };
 
   // Prepare chart data
-  const weeklyChartData = Object.entries(weeklyStats).map(([date, stats]) => ({
-    date: new Date(date).toLocaleDateString('ja-JP', { weekday: 'short' }),
-    focusTime: Math.round(stats.totalFocusTime / 60),
-    pomodoros: stats.pomodoroCount,
-  }));
+  const { weeklyChartData, weeklyCategoryIds } = useMemo(() => {
+    const categoryIds: Record<string, boolean> = {};
+    const data = Object.entries(weeklyStats).map(([date, stats]) => {
+      const categoryBreakdown: Record<string, number> = {};
+
+      stats.sessions
+        .filter(s => s.sessionType === 'pomodoro')
+        .forEach(session => {
+          const id = session.categoryId || 'uncategorized';
+          if (session.categoryId) {
+            categoryIds[session.categoryId] = true;
+          }
+          categoryBreakdown[id] = (categoryBreakdown[id] || 0) + Math.round(session.duration / 60);
+        });
+
+      // Combine small adjustments if total focus time derived from breakdown doesn't exact match due to rounding,
+      // but simpler to just use the breakdown sums.
+
+      return {
+        date: new Date(date).toLocaleDateString('ja-JP', { weekday: 'short' }),
+        ...categoryBreakdown,
+        // Keep total for reference if needed, though stacked bars visualize it
+        totalFocusTime: Math.round(stats.totalFocusTime / 60),
+      };
+    });
+
+    return { weeklyChartData: data, weeklyCategoryIds: categoryIds };
+  }, [weeklyStats]);
 
   const monthlyChartData = Object.entries(monthlyStats).map(([date, stats]) => ({
     date: new Date(date).getDate(),
@@ -149,9 +172,22 @@ export const StatsDashboard = memo(function StatsDashboard() {
             <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.weeklyFocus')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={weeklyChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis
+                  dataKey="date"
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{
+                    fill: 'hsl(var(--foreground))',
+                    style: { textShadow: '0px 1px 3px rgba(0,0,0,0.8)' }
+                  }}
+                />
+                <YAxis
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{
+                    fill: 'hsl(var(--foreground))',
+                    style: { textShadow: '0px 1px 3px rgba(0,0,0,0.8)' }
+                  }}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
@@ -166,7 +202,16 @@ export const StatsDashboard = memo(function StatsDashboard() {
                   cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
                 />
                 <Legend iconType="circle" />
-                <Bar dataKey="focusTime" fill="hsl(var(--primary))" name="Focus (min)" radius={[4, 4, 0, 0]} />
+                {Object.keys(weeklyCategoryIds).map((categoryId) => (
+                  <Bar
+                    key={categoryId}
+                    dataKey={categoryId}
+                    name={categoryMap[categoryId]?.name || 'Unknown'}
+                    stackId="a"
+                    fill={categoryMap[categoryId]?.color || '#CCCCCC'}
+                    radius={[0, 0, 0, 0]}
+                  />
+                ))}
               </BarChart>
             </ResponsiveContainer>
           </Card>

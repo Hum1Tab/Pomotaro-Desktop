@@ -1,0 +1,135 @@
+﻿  窶｢ electron-builder  version=26.0.12 os=10.0.26100
+  窶｢ loaded configuration  file=package.json ("build" field)
+  窶｢ executing @electron/rebuild  electronVersion=39.2.7 arch=x64 buildFromSource=false appDir=./
+  窶｢ installing native dependencies  arch=x64
+  窶｢ completed installing native dependencies
+  窶｢ packaging       platform=win32 arch=x64 electron=39.2.7 appOutDir=release\1.1.21\win-unpacked
+  窶｢ updating asar integrity executable resource  executablePath=release\1.1.21\win-unpacked\Pomotaro.exe
+  窶｢ downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z size=5.6 MB parts=1
+  窶｢ downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z duration=522ms
+  筧ｯ cannot execute  cause=exit status 2
+                    out=
+    7-Zip (a) 21.07 (x64) : Copyright (c) 1999-2021 Igor Pavlov : 2021-12-26
+    
+    Scanning the drive for archives:
+    1 file, 5635384 bytes (5504 KiB)
+    
+    Extracting archive: C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\015958175.7z
+    --
+    Path = C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\015958175.7z
+    Type = 7z
+    Physical Size = 5635384
+    Headers Size = 1492
+    Method = LZMA2:24m LZMA:20 BCJ2
+    Solid = +
+    Blocks = 2
+    
+    
+    Sub items Errors: 2
+    
+    Archives with Errors: 1
+    
+    Sub items Errors: 2
+    
+                    errorOut=ERROR: Cannot create symbolic link : クライアントは要求された特権を保有していません。 : C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\015958175\darwin\10.12\lib\libcrypto.dylib
+    ERROR: Cannot create symbolic link : クライアントは要求された特権を保有していません。 : C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\015958175\darwin\10.12\lib\libssl.dylib
+    
+                    command='C:\Users\humit\Downloads\Pomotaro-Desktop-main\Pomotaro-Desktop-main\node_modules\7zip-bin\win\x64\7za.exe' x -snld -bd 'C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\015958175.7z' '-oC:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\015958175'
+                    workingDir=C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign
+  窶｢ Above command failed, retrying 3 more times
+  窶｢ downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z size=5.6 MB parts=1
+  窶｢ downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z duration=247ms
+  筧ｯ cannot execute  cause=exit status 2
+                    out=
+    7-Zip (a) 21.07 (x64) : Copyright (c) 1999-2021 Igor Pavlov : 2021-12-26
+    
+    Scanning the drive for archives:
+    1 file, 5635384 bytes (5504 KiB)
+    
+    Extracting archive: C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\290628243.7z
+    --
+    Path = C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\290628243.7z
+    Type = 7z
+    Physical Size = 5635384
+    Headers Size = 1492
+    Method = LZMA2:24m LZMA:20 BCJ2
+    Solid = +
+    Blocks = 2
+    
+    
+    Sub items Errors: 2
+    
+    Archives with Errors: 1
+    
+    Sub items Errors: 2
+    
+                    errorOut=ERROR: Cannot create symbolic link : クライアントは要求された特権を保有していません。 : C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\290628243\darwin\10.12\lib\libcrypto.dylib
+    ERROR: Cannot create symbolic link : クライアントは要求された特権を保有していません。 : C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\290628243\darwin\10.12\lib\libssl.dylib
+    
+                    command='C:\Users\humit\Downloads\Pomotaro-Desktop-main\Pomotaro-Desktop-main\node_modules\7zip-bin\win\x64\7za.exe' x -snld -bd 'C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\290628243.7z' '-oC:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\290628243'
+                    workingDir=C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign
+  窶｢ Above command failed, retrying 3 more times
+  窶｢ downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z size=5.6 MB parts=1
+  窶｢ downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z duration=267ms
+  筧ｯ cannot execute  cause=exit status 2
+                    out=
+    7-Zip (a) 21.07 (x64) : Copyright (c) 1999-2021 Igor Pavlov : 2021-12-26
+    
+    Scanning the drive for archives:
+    1 file, 5635384 bytes (5504 KiB)
+    
+    Extracting archive: C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\598859535.7z
+    --
+    Path = C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\598859535.7z
+    Type = 7z
+    Physical Size = 5635384
+    Headers Size = 1492
+    Method = LZMA2:24m LZMA:20 BCJ2
+    Solid = +
+    Blocks = 2
+    
+    
+    Sub items Errors: 2
+    
+    Archives with Errors: 1
+    
+    Sub items Errors: 2
+    
+                    errorOut=ERROR: Cannot create symbolic link : クライアントは要求された特権を保有していません。 : C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\598859535\darwin\10.12\lib\libcrypto.dylib
+    ERROR: Cannot create symbolic link : クライアントは要求された特権を保有していません。 : C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\598859535\darwin\10.12\lib\libssl.dylib
+    
+                    command='C:\Users\humit\Downloads\Pomotaro-Desktop-main\Pomotaro-Desktop-main\node_modules\7zip-bin\win\x64\7za.exe' x -snld -bd 'C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\598859535.7z' '-oC:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\598859535'
+                    workingDir=C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign
+  窶｢ Above command failed, retrying 3 more times
+  窶｢ downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z size=5.6 MB parts=1
+  窶｢ downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z duration=291ms
+  筧ｯ cannot execute  cause=exit status 2
+                    out=
+    7-Zip (a) 21.07 (x64) : Copyright (c) 1999-2021 Igor Pavlov : 2021-12-26
+    
+    Scanning the drive for archives:
+    1 file, 5635384 bytes (5504 KiB)
+    
+    Extracting archive: C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\855749515.7z
+    --
+    Path = C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\855749515.7z
+    Type = 7z
+    Physical Size = 5635384
+    Headers Size = 1492
+    Method = LZMA2:24m LZMA:20 BCJ2
+    Solid = +
+    Blocks = 2
+    
+    
+    Sub items Errors: 2
+    
+    Archives with Errors: 1
+    
+    Sub items Errors: 2
+    
+                    errorOut=ERROR: Cannot create symbolic link : クライアントは要求された特権を保有していません。 : C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\855749515\darwin\10.12\lib\libcrypto.dylib
+    ERROR: Cannot create symbolic link : クライアントは要求された特権を保有していません。 : C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\855749515\darwin\10.12\lib\libssl.dylib
+    
+                    command='C:\Users\humit\Downloads\Pomotaro-Desktop-main\Pomotaro-Desktop-main\node_modules\7zip-bin\win\x64\7za.exe' x -snld -bd 'C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\855749515.7z' '-oC:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign\855749515'
+                    workingDir=C:\Users\humit\AppData\Local\electron-builder\Cache\winCodeSign
+  窶｢ Above command failed, retrying 3 more times
