@@ -57,6 +57,12 @@ export const StatsDashboard = memo(function StatsDashboard() {
     return `${hours}h ${minutes}m`;
   };
 
+  const formatTooltipDuration = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h}時間 ${m}分` : `${m}分`;
+  };
+
   // Prepare chart data
   const { weeklyChartData, weeklyCategoryIds } = useMemo(() => {
     const categoryIds: Record<string, boolean> = {};
@@ -115,25 +121,25 @@ export const StatsDashboard = memo(function StatsDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+        <Card className="p-4 bg-card shadow-warm">
           <div className="text-xs sm:text-sm text-muted-foreground">{t('stats.totalFocus')}</div>
           <div className="text-xl sm:text-2xl font-bold text-primary mt-2">
             {formatTime(totalStats.totalFocusTime)}
           </div>
         </Card>
-        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+        <Card className="p-4 bg-card shadow-warm">
           <div className="text-xs sm:text-sm text-muted-foreground">{t('stats.totalPomodoros')}</div>
           <div className="text-xl sm:text-2xl font-bold text-primary mt-2">
             {totalStats.pomodoroCount}
           </div>
         </Card>
-        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+        <Card className="p-4 bg-card shadow-warm">
           <div className="text-xs sm:text-sm text-muted-foreground">{t('stats.totalBreak')}</div>
           <div className="text-xl sm:text-2xl font-bold text-accent-foreground mt-2">
             {formatTime(totalStats.totalBreakTime)}
           </div>
         </Card>
-        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+        <Card className="p-4 bg-card shadow-warm">
           <div className="text-xs sm:text-sm text-muted-foreground">{t('stats.todaysFocus')}</div>
           <div className="text-xl sm:text-2xl font-bold text-primary mt-2">
             {formatTime(dailyStats.totalFocusTime)}
@@ -150,7 +156,7 @@ export const StatsDashboard = memo(function StatsDashboard() {
         </TabsList>
 
         <TabsContent value="day" className="space-y-4">
-          <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+          <Card className="p-4 bg-card shadow-warm">
             <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.todaysSessions')}</h3>
             <div className="space-y-2">
               {dailyStats.sessions.length === 0 ? (
@@ -168,48 +174,55 @@ export const StatsDashboard = memo(function StatsDashboard() {
         </TabsContent>
 
         <TabsContent value="week" className="space-y-4">
-          <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+          <Card className="p-4 bg-card shadow-warm">
             <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.weeklyFocus')}</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={weeklyChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+              <BarChart data={weeklyChartData} barSize={32}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
                 <XAxis
                   dataKey="date"
                   stroke="hsl(var(--muted-foreground))"
                   tick={{
                     fill: 'hsl(var(--foreground))',
-                    style: { textShadow: '0px 1px 3px rgba(0,0,0,0.8)' }
+                    fontSize: 12
                   }}
+                  axisLine={false}
+                  tickLine={false}
+                  dy={10}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
                   tick={{
-                    fill: 'hsl(var(--foreground))',
-                    style: { textShadow: '0px 1px 3px rgba(0,0,0,0.8)' }
+                    fill: 'hsl(var(--muted-foreground))',
+                    fontSize: 12
                   }}
+                  axisLine={false}
+                  tickLine={false}
+                  dx={-10}
                 />
                 <Tooltip
+                  cursor={{ fill: 'hsl(var(--muted-foreground))', opacity: 0.1 }}
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     borderColor: 'hsl(var(--border))',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                    color: 'hsl(var(--foreground))'
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+                    color: 'hsl(var(--foreground))',
+                    padding: '12px'
                   }}
-                  itemStyle={{ color: 'hsl(var(--foreground))' }}
-                  labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 500 }}
+                  labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: '8px' }}
                   isAnimationActive={false}
-                  cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
                 />
-                <Legend iconType="circle" />
-                {Object.keys(weeklyCategoryIds).map((categoryId) => (
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                {Object.keys(weeklyCategoryIds).map((categoryId, index) => (
                   <Bar
                     key={categoryId}
                     dataKey={categoryId}
                     name={categoryMap[categoryId]?.name || 'Unknown'}
                     stackId="a"
                     fill={categoryMap[categoryId]?.color || '#CCCCCC'}
-                    radius={[0, 0, 0, 0]}
+                    radius={index === Object.keys(weeklyCategoryIds).length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                   />
                 ))}
               </BarChart>
@@ -218,7 +231,7 @@ export const StatsDashboard = memo(function StatsDashboard() {
         </TabsContent>
 
         <TabsContent value="month" className="space-y-4">
-          <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+          <Card className="p-4 bg-card shadow-warm">
             <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.monthlyFocus')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={monthlyChartData}>
@@ -245,7 +258,7 @@ export const StatsDashboard = memo(function StatsDashboard() {
         </TabsContent>
 
         <TabsContent value="year" className="space-y-4">
-          <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+          <Card className="p-4 bg-card shadow-warm">
             <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.yearlyFocus')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={yearlyChartData}>
@@ -273,7 +286,7 @@ export const StatsDashboard = memo(function StatsDashboard() {
         </TabsContent>
       </Tabs>
 
-      <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+      <Card className="p-4 bg-card shadow-warm">
         <h3 className="text-sm font-semibold text-foreground mb-4">{t('stats.focusVsBreak')}</h3>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -281,34 +294,39 @@ export const StatsDashboard = memo(function StatsDashboard() {
               data={pieData}
               cx="50%"
               cy="50%"
-              labelLine={false}
-              label={({ name, value }) => `${name}: ${value}m`}
-              outerRadius={80}
-              fill="#8884d8"
+              innerRadius={60}
+              outerRadius={90}
+              paddingAngle={5}
+              cornerRadius={6}
               dataKey="value"
+              stroke="none"
             >
               {pieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
             <Tooltip
+              cursor={{ fill: 'hsl(var(--muted-foreground))', opacity: 0.1 }}
               contentStyle={{
                 backgroundColor: 'hsl(var(--card))',
                 borderColor: 'hsl(var(--border))',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                color: 'hsl(var(--foreground))'
+                borderRadius: '12px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+                color: 'hsl(var(--foreground))',
+                padding: '12px'
               }}
-              itemStyle={{ color: 'hsl(var(--foreground))' }}
+              itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 500 }}
               isAnimationActive={false}
+              formatter={(value: number, name: string) => [formatTooltipDuration(value), name]}
             />
+            <Legend verticalAlign="bottom" height={36} iconType="circle" />
           </PieChart>
         </ResponsiveContainer>
       </Card>
 
       {/* Category Statistics */}
       {categoryPieData.length > 0 && (
-        <Card className="p-4 bg-card/90 backdrop-blur-sm shadow-warm">
+        <Card className="p-4 bg-card shadow-warm">
           <h3 className="text-sm font-semibold text-foreground mb-4">カテゴリー別学習時間</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -316,27 +334,32 @@ export const StatsDashboard = memo(function StatsDashboard() {
                 data={categoryPieData}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value}m`}
-                outerRadius={80}
-                fill="#8884d8"
+                innerRadius={60}
+                outerRadius={90}
+                paddingAngle={5}
+                cornerRadius={6}
                 dataKey="value"
+                stroke="none"
               >
                 {categoryPieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
               <Tooltip
+                cursor={{ fill: 'hsl(var(--muted-foreground))', opacity: 0.1 }}
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
                   borderColor: 'hsl(var(--border))',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                  color: 'hsl(var(--foreground))'
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+                  color: 'hsl(var(--foreground))',
+                  padding: '12px'
                 }}
-                itemStyle={{ color: 'hsl(var(--foreground))' }}
+                itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 500 }}
                 isAnimationActive={false}
+                formatter={(value: number, name: string) => [formatTooltipDuration(value), name]}
               />
+              <Legend verticalAlign="bottom" height={36} iconType="circle" />
             </PieChart>
           </ResponsiveContainer>
 

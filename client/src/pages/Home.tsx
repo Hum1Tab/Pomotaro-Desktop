@@ -13,12 +13,10 @@ import { AddTaskForm } from '@/components/AddTaskForm';
 import { StatsDashboard } from '@/components/StatsDashboard';
 import { StopwatchMode } from '@/components/StopwatchMode';
 import { CalendarView } from '@/components/CalendarView';
-import { TimerExtension } from '@/components/TimerExtension';
 import { CategorySelector } from '@/components/CategorySelector';
 import { CategorySelectionDialog } from '@/components/CategorySelectionDialog';
 
 import { ShortcutsDialog } from '@/components/ShortcutsDialog';
-import { WeeklyChart } from '@/components/WeeklyChart';
 import { ExamCountdown } from '@/components/ExamCountdown';
 import { ExamManager } from '@/components/ExamManager';
 import { FallingTomato } from '@/components/FallingTomato';
@@ -216,16 +214,8 @@ export default function Home() {
               <div className="bg-card rounded-lg p-4 sm:p-8 shadow-warm">
                 <ShortcutsDialog />
               </div>
-              <div className="bg-card rounded-lg p-4 sm:p-8 shadow-warm">
-                <WeeklyChart />
-              </div>
-              <div className="bg-card rounded-lg p-4 sm:p-8 shadow-warm">
-                <h2 className="text-lg font-semibold text-foreground mb-6">{t('timer.extension')}</h2>
-                <TimerExtension
-                  onExtendTime={() => { }}
-                  currentTimeLeft={pomodoro.timeLeft}
-                />
-              </div>
+
+
             </TabsContent>
           </Tabs>
         </main>

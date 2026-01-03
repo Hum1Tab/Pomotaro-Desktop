@@ -20,7 +20,7 @@ interface DailyStatsDialogProps {
     dateStr: string;
 }
 
-const COLORS = ['#E8644A', '#8B9D83', '#E8A84A', '#4A90E2', '#9B59B6', '#34495E'];
+
 
 export function DailyStatsDialog({ isOpen, onClose, stats, dateStr }: DailyStatsDialogProps) {
     const { t } = useLanguage();
@@ -60,21 +60,43 @@ export function DailyStatsDialog({ isOpen, onClose, stats, dateStr }: DailyStats
     const sessions = stats?.sessions || [];
     const focusSessions = sessions.filter(s => s.sessionType === 'pomodoro');
 
-    // Aggregate by category
+    // Aggregate by category ID to preserve color info
     const categoryStats = useMemo(() => {
-        return focusSessions.reduce((acc: Record<string, number>, session: SessionRecord) => {
-            const name = session.categoryName || 'Uncategorized';
-            acc[name] = (acc[name] || 0) + session.duration;
-            return acc;
-        }, {} as Record<string, number>);
-    }, [focusSessions]);
+        const stats: Record<string, { name: string; duration: number; color: string }> = {};
+
+        focusSessions.forEach((session) => {
+            const id = session.categoryId || 'uncategorized';
+            const category = session.categoryId ? categoryMap[session.categoryId] : null;
+
+            if (!stats[id]) {
+                stats[id] = {
+                    name: category?.name || session.categoryName || t('stats.uncategorized') || 'Uncategorized',
+                    duration: 0,
+                    color: category?.color || '#9ca3af' // Default gray
+                };
+            }
+            stats[id].duration += session.duration;
+        });
+
+        return Object.values(stats);
+    }, [focusSessions, categoryMap, t]);
 
     const pieData = useMemo(() => {
-        return Object.entries(categoryStats).map(([name, value]: [string, unknown]) => ({
-            name,
-            value: Math.round((value as number) / 60), // minutes
-        })).sort((a, b) => b.value - a.value);
+        return categoryStats
+            .map((stat) => ({
+                name: stat.name,
+                value: Math.round(stat.duration / 60), // minutes
+                color: stat.color
+            }))
+            .sort((a, b) => b.value - a.value);
     }, [categoryStats]);
+
+    // Tooltip duration formatter
+    const formatTooltipDuration = (minutes: number) => {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        return h > 0 ? `${h}時間 ${m}分` : `${m}分`;
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -113,22 +135,26 @@ export function DailyStatsDialog({ isOpen, onClose, stats, dateStr }: DailyStats
                                         innerRadius={60}
                                         outerRadius={80}
                                         paddingAngle={5}
+                                        cornerRadius={6}
                                         dataKey="value"
+                                        stroke="none"
                                     >
                                         {pieData.map((entry, index) => (
-                                            <Cell key={`cell - ${index} `} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
                                     <RechartsTooltip
-                                        formatter={(value: number) => `${value} min`}
+                                        formatter={(value: number, name: string) => [formatTooltipDuration(value), name]}
                                         contentStyle={{
-                                            backgroundColor: 'hsl(var(--popover))',
-                                            color: 'hsl(var(--popover-foreground))',
-                                            borderRadius: '8px',
+                                            backgroundColor: 'hsl(var(--card))',
+                                            color: 'hsl(var(--foreground))',
+                                            borderRadius: '12px',
                                             border: '1px solid hsl(var(--border))',
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+                                            padding: '12px'
                                         }}
-                                        itemStyle={{ color: 'inherit' }}
+                                        itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 500 }}
+                                        cursor={{ fill: 'hsl(var(--muted-foreground))', opacity: 0.1 }}
                                     />
                                     <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" />
                                 </PieChart>
