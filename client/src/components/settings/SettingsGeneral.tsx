@@ -84,6 +84,18 @@ export function SettingsGeneral() {
                 </Button>
             </div>
 
+            {/* Auto Compact On Unmaximize Setting */}
+            <div className="flex items-center justify-between animate-fade-in">
+                <div className="space-y-0.5">
+                    <label className="text-sm font-medium">{t('settings.autoCompactOnUnmaximize')}</label>
+                    <p className="text-xs text-muted-foreground">{t('settings.autoCompactOnUnmaximizeDesc')}</p>
+                </div>
+                <Switch
+                    checked={appearanceSettings.autoCompactOnUnmaximize}
+                    onCheckedChange={(checked) => updateAppearance({ autoCompactOnUnmaximize: checked })}
+                />
+            </div>
+
             {/* Always on Top (Standard) */}
             <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">{t('settings.alwaysOnTop')}</label>

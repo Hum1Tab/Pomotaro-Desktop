@@ -164,6 +164,8 @@ export const translations: Translations = {
         'settings.compactActive': 'Active',
         'settings.compactEnable': 'Enable',
         'settings.compactDisable': 'Maximize (Disable Compact Mode)',
+        'settings.autoCompactOnUnmaximize': 'Auto-compact on unmaximize',
+        'settings.autoCompactOnUnmaximizeDesc': 'Automatically switch to compact mode when window is restored from maximized state',
 
         // Themes
         'settings.themeColor': 'Color Theme',
@@ -349,6 +351,8 @@ export const translations: Translations = {
         'settings.compactActive': '有効中',
         'settings.compactEnable': '有効にする',
         'settings.compactDisable': '最大化（コンパクトモードを終了）',
+        'settings.autoCompactOnUnmaximize': '最大化解除時に自動的にコンパクトモード',
+        'settings.autoCompactOnUnmaximizeDesc': 'ウィンドウを最大化から元のサイズに戻した際、自動的にミニウィンドウへ切り替えます',
 
         // Themes
         'settings.themeColor': '配色テーマ',

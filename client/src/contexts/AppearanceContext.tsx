@@ -21,6 +21,7 @@ export interface AppearanceSettings {
     mediaUrl: string;
     bgOpacity: number;
     isCompact: boolean; // Added
+    autoCompactOnUnmaximize: boolean; // Added
 }
 
 const DEFAULT_SETTINGS: AppearanceSettings = {
@@ -30,6 +31,7 @@ const DEFAULT_SETTINGS: AppearanceSettings = {
     mediaUrl: '',
     bgOpacity: 0.2, // For media overlay
     isCompact: false, // Added
+    autoCompactOnUnmaximize: true, // Added
 };
 
 interface AppearanceContextType {
@@ -73,13 +75,28 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     const updateSettings = (newSettings: Partial<AppearanceSettings>) => {
         setSettings(prev => {
             const updated = { ...prev, ...newSettings };
-
-            // If isCompact changed, potentially do side effects if needed
-            // However, we rely on the component using the hook to call Electron API for now
-            // or we can centralize it here.
             return updated;
         });
     };
+
+    // Global Window State Listener
+    useEffect(() => {
+        if (window.electronAPI?.onWindowStateChanged) {
+            const cleanup = window.electronAPI.onWindowStateChanged((state: string) => {
+                setSettings(prev => {
+                    if (state === 'maximized') {
+                        return { ...prev, isCompact: false };
+                    } else if (state === 'unmaximized') {
+                        if (prev.autoCompactOnUnmaximize) {
+                            return { ...prev, isCompact: true };
+                        }
+                    }
+                    return prev;
+                });
+            });
+            return cleanup;
+        }
+    }, []);
 
     return (
         <AppearanceContext.Provider value={{ settings, updateSettings }}>

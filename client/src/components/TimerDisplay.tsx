@@ -47,7 +47,7 @@ export function TimerDisplay({ timeLeft, sessionType, className }: TimerDisplayP
             {/* Circular Progress */}
             <div className={cn(
                 "relative transition-all duration-500",
-                appearanceSettings.isCompact ? "w-[240px] h-[240px]" : "w-[300px] h-[300px] sm:w-[400px] sm:h-[400px]"
+                appearanceSettings.isCompact ? "w-[180px] h-[180px]" : "w-[300px] h-[300px] sm:w-[400px] sm:h-[400px]"
             )}>
 
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -80,13 +80,13 @@ export function TimerDisplay({ timeLeft, sessionType, className }: TimerDisplayP
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <div className={cn(
                         "font-light tabular-nums tracking-tighter text-white drop-shadow-lg transition-all",
-                        appearanceSettings.isCompact ? "text-5xl" : "text-6xl sm:text-8xl"
+                        appearanceSettings.isCompact ? "text-4xl" : "text-6xl sm:text-8xl"
                     )}>
                         {formatTime(minutes)}:{formatTime(seconds)}
                     </div>
                     <div className={cn(
-                        "font-medium text-white/80 mt-2 tracking-widest uppercase transition-all",
-                        appearanceSettings.isCompact ? "text-sm" : "text-lg sm:text-xl"
+                        "font-medium text-white/80 mt-1 tracking-widest uppercase transition-all",
+                        appearanceSettings.isCompact ? "text-[10px]" : "text-lg sm:text-xl"
                     )}>
                         {sessionType === 'pomodoro' ? 'FOCUS' : 'BREAK'}
                     </div>

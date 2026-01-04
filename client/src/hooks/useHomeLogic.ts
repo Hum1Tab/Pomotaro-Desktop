@@ -98,15 +98,7 @@ export function useHomeLogic() {
     }, [isFocusMode, appearanceSettings.isCompact]);
 
     // Listen for Native Window Events
-    useEffect(() => {
-        if (window.electronAPI?.onWindowStateChanged) {
-            window.electronAPI.onWindowStateChanged((state: string) => {
-                if (state === 'maximized') {
-                    updateAppearance({ isCompact: false });
-                }
-            });
-        }
-    }, []);
+    // (Now handled globally in AppearanceContext)
 
     // Trigger Tick Sound
     useEffect(() => {

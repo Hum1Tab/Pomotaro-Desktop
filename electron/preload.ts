@@ -10,7 +10,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     unmaximizeWindow: () => ipcRenderer.invoke('unmaximize-window'),
     isMaximized: () => ipcRenderer.invoke('is-maximized'),
     onWindowStateChanged: (callback: (state: string) => void) => {
-        ipcRenderer.on('window-state-changed', (_, state) => callback(state));
+        const listener = (_: any, state: string) => callback(state);
+        ipcRenderer.on('window-state-changed', listener);
+        return () => {
+            ipcRenderer.removeListener('window-state-changed', listener);
+        };
     },
     onUpdateStatus: (callback: (message: string) => void) => {
         ipcRenderer.on('update-status', (_, message) => callback(message));

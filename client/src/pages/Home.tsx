@@ -223,23 +223,53 @@ export default function Home() {
 
       {/* Compact Mode Layout */}
       {!isFocusMode && appearanceSettings.isCompact && (
-        <main className="fixed inset-0 flex flex-col items-center justify-center p-4 animate-fade-in">
-          <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-50">
-            <Button onClick={goToSettings} variant="ghost" size="icon" className="bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white">
-              <Settings className="w-5 h-5" />
-            </Button>
-            <Button onClick={toggleNoise} variant="ghost" size="icon" className={`bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white ${isNoisePlaying ? 'animate-pulse text-white' : ''}`} title={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')}>
-              <Waves className="w-5 h-5" />
-            </Button>
-            <Button onClick={toggleCompactMode} variant="ghost" size="icon" className="bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white" title={t('settings.compactDisable')}>
-              <Maximize2 className="w-5 h-5" />
-            </Button>
-          </div>
-          <div className="flex flex-col items-center gap-6">
-            <TimerDisplay timeLeft={pomodoro.timeLeft} sessionType={pomodoro.sessionType} />
-            <TimerControls isRunning={pomodoro.isRunning} onStart={handleStartTimer} onPause={pomodoro.pause} onReset={pomodoro.reset} />
-            <div className="text-sm font-medium text-white/60 bg-white/5 px-3 py-1 rounded-full backdrop-blur-sm">
-              {pomodoro.sessionType === 'pomodoro' ? t('timer.focusTime') : t('timer.breakTime')}
+        <main className="fixed inset-0 flex flex-col items-center justify-between p-6 animate-fade-in select-none">
+          {/* Draggable Background Area */}
+          <div
+            className="absolute inset-0 z-0"
+            style={{ WebkitAppRegion: 'drag' } as any}
+          />
+
+          <div className="relative z-10 w-full h-full flex flex-col items-center justify-between py-2">
+            {/* Top: Session Tabs */}
+            <div className="scale-90 opacity-90 hover:opacity-100 transition-opacity pointer-events-auto" style={{ WebkitAppRegion: 'no-drag' } as any}>
+              <SessionTabs
+                currentSession={pomodoro.sessionType}
+                onSessionChange={pomodoro.switchSession}
+              />
+            </div>
+
+            {/* Center: Timer Display */}
+            <div className="flex-1 flex items-center justify-center py-4">
+              <TimerDisplay timeLeft={pomodoro.timeLeft} sessionType={pomodoro.sessionType} />
+            </div>
+
+            {/* Bottom: Controls and Meta Actions */}
+            <div className="flex flex-col items-center gap-4 w-full" style={{ WebkitAppRegion: 'no-drag' } as any}>
+              <div className="pointer-events-auto">
+                <TimerControls isRunning={pomodoro.isRunning} onStart={handleStartTimer} onPause={pomodoro.pause} onReset={pomodoro.reset} />
+              </div>
+
+              <div className="flex items-center justify-between w-full px-2 gap-2">
+                <Button onClick={goToSettings} variant="ghost" size="icon" className="bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white pointer-events-auto h-8 w-8">
+                  <Settings className="w-3.5 h-3.5" />
+                </Button>
+
+                <div className="flex-1 text-center">
+                  <div className="inline-block text-[10px] font-medium text-white/60 bg-white/5 px-2 py-0.5 rounded-full backdrop-blur-sm whitespace-nowrap">
+                    {pomodoro.sessionType === 'pomodoro' ? t('timer.focusTime') : t('timer.breakTime')}
+                  </div>
+                </div>
+
+                <div className="flex gap-1.5">
+                  <Button onClick={toggleNoise} variant="ghost" size="icon" className={`bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white pointer-events-auto h-8 w-8 ${isNoisePlaying ? 'animate-pulse text-white' : ''}`} title={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')}>
+                    <Waves className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button onClick={toggleCompactMode} variant="ghost" size="icon" className="bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white pointer-events-auto h-8 w-8" title={t('settings.compactDisable')}>
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </main>
@@ -247,16 +277,42 @@ export default function Home() {
 
       {/* Focus Mode Overlay */}
       {isFocusMode && (
-        <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center p-4 animate-in fade-in duration-300">
-          <Button variant="ghost" size="icon" className="absolute top-4 right-4 sm:top-8 sm:right-8 text-muted-foreground hover:text-foreground w-12 h-12 rounded-full hover:bg-muted/20" onClick={() => setIsFocusMode(false)} title={t('timer.exitFocusMode')}>
-            <Minimize2 className="w-8 h-8" />
-          </Button>
-          <div className="flex-1 flex flex-col items-center justify-center w-full gap-8 sm:gap-16">
-            <TimerDisplay timeLeft={pomodoro.timeLeft} sessionType={pomodoro.sessionType} className="text-[25vw] sm:text-[20vw] font-bold leading-none select-none" />
-            <div className="scale-125 sm:scale-150 transform origin-center">
-              <TimerControls isRunning={pomodoro.isRunning} onStart={handleStartTimer} onPause={pomodoro.pause} onReset={pomodoro.reset} />
+        <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center p-8 animate-in fade-in duration-300">
+          <div className="flex-1 flex flex-col items-center justify-center w-full gap-8 sm:gap-12">
+            <div className="scale-110 opacity-80 hover:opacity-100 transition-opacity">
+              <SessionTabs
+                currentSession={pomodoro.sessionType}
+                onSessionChange={pomodoro.switchSession}
+              />
             </div>
-            <div className="text-xl sm:text-2xl text-muted-foreground font-medium opacity-50">
+
+            <TimerDisplay timeLeft={pomodoro.timeLeft} sessionType={pomodoro.sessionType} className="scale-110 sm:scale-125" />
+
+            <div className="flex flex-col items-center gap-12 mt-8">
+              <div className="scale-125 sm:scale-150 transform origin-center">
+                <TimerControls isRunning={pomodoro.isRunning} onStart={handleStartTimer} onPause={pomodoro.pause} onReset={pomodoro.reset} />
+              </div>
+
+              <div className="flex items-center gap-8 bg-white/5 backdrop-blur-md p-2 px-6 rounded-full border border-white/10">
+                <Button onClick={goToSettings} variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground w-12 h-12 rounded-full hover:bg-muted/20">
+                  <Settings className="w-6 h-6" />
+                </Button>
+
+                <div className="w-px h-6 bg-white/10" />
+
+                <Button onClick={toggleNoise} variant="ghost" size="icon" className={`text-muted-foreground hover:text-foreground w-12 h-12 rounded-full hover:bg-muted/20 ${isNoisePlaying ? 'animate-pulse text-primary' : ''}`} title={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')}>
+                  <Waves className="w-6 h-6" />
+                </Button>
+
+                <div className="w-px h-6 bg-white/10" />
+
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground w-12 h-12 rounded-full hover:bg-muted/20" onClick={() => setIsFocusMode(false)} title={t('timer.exitFocusMode')}>
+                  <Minimize2 className="w-6 h-6" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="text-xl sm:text-2xl text-muted-foreground font-medium opacity-30 mt-4">
               {pomodoro.sessionType === 'pomodoro' ? t('timer.focusTime') : t('timer.breakTime')}
             </div>
           </div>
