@@ -1,60 +1,85 @@
-# Pomotaro 🍑 [日本語版](./README.ja.md)
+# Pomotaro 🍑
 
-Pomotaro is a modern, feature-rich Pomodoro timer application designed to be your best companion for productivity. Unlike simple timers, Pomotaro focuses on extreme precision and reliability, ensuring your hard-earned focus is never lost.
+![Pomotaro](./client/public/screenshots/readme-header.png)
 
-![Pomotaro Main Interface](./client/public/screenshots/timer_main.png)
+<div align="center">
 
-## ✨ Features
+[![Latest Release](https://img.shields.io/github/v/release/Hum1Tab/Pomotaro-Desktop?style=for-the-badge&color=orange)](https://github.com/Hum1Tab/Pomotaro-Desktop/releases/latest)
+[![License](https://img.shields.io/github/license/Hum1Tab/Pomotaro-Desktop?style=for-the-badge&color=blue)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Mac%20%7C%20Linux-lightgrey?style=for-the-badge)
 
-### 🚀 Powerful Companions
-- **🐕 Faithful Dog: High-Precision Timer**
-  - Uses timestamp-based logic for millisecond accuracy, unaffected by system load.
-  - **State Persistence**: Automatically restores your timer exactly where you left off, even after an app restart or PC reboot.
-- **🐒 Clever Monkey: Discord Rich Presence**
-  - Syncs your focus status, current pomodoro count, and session type to Discord in real-time.
-- **🕊️ Sharp Pheasant: Title Bar Progress**
-  - Displays remaining time in the window title, allowing you to track progress while working in other apps.
+**[日本語版はこちら](./README.ja.md)**
 
-### 🛡️ Ironclad Data Security
-- **Hybrid Storage**: Simultaneously saves data to both `localStorage` and a physical file (`app-data.json`).
-- **Auto-Recovery**: Automatically restores your history and tasks from the physical file if browser cache is cleared.
-- **Full Backup**: Export and import your entire profile, including settings, tasks, and detailed session history.
+</div>
 
-### 🎨 Refined Experience
-- **Zero-Latency Audio**: Pre-loaded white noise (White/Pink/Brown) and notification sounds for instant response.
-- **Smart Accessibility**: Auto-focus on task inputs and arrow-key shortcuts for quick session switching.
-- **Modern UI/UX**: Dark mode, smooth animations, and a sleek glassmorphism design.
+---
 
-### 📊 Visual Insights
-![Statistics Dashboard](./client/public/screenshots/stats_dashboard.png)
-![Settings Page](./client/public/screenshots/settings_page.png)
+### Your Ultimate Productivity Companion.
+
+**Pomotaro** is not just another timer. It is a precision-engineered tool designed to protect your focus at all costs. With millisecond-accurate timing, robust data persistence, and seamless integrations, it stands as your faithful guardian in the battle against distraction.
+
+## ✨ Powerful Features
+
+### 🐕 The Faithful Dog: Unwavering Precision
+> *Never lose a second.*
+- **Timestamp-Based Logic**: Immune to system lag or freezes. Time is tracked with absolute accuracy.
+- **Auto-State Recovery**: Accidentally closed the app? PC crashed? Pomotaro remembers exactly where you left off.
+
+### 🐒 The Clever Monkey: Social & Connected
+> *Focus together.*
+- **Discord Rich Presence**: Automatically syncs your focus status, session type, and Pomodoro count to your Discord profile. Let your friends know you're in the zone.
+
+### 🕊️ The Sharp Pheasant: Always Aware
+> *Glanceable progress.*
+- **Window Title Sync**: Track your remaining time directly from the window title bar, visible even when the app is in the background.
+
+---
+
+## 🛡️ Ironclad Security
+
+Your data is sacred. Pomotaro employs a **Dual-Layer Storage System**:
+1.  **Instant Access**: `localStorage` for lightning-fast performance.
+2.  **Physical Backup**: `app-data.json` for permanent reliability.
+
+Even if you clear your browser cache, your history and settings are automatically restored from the local file system.
+
+---
+
+## 🎨 A Premium Experience
+
+- **Glassmorphism Design**: sleek, dark-themed UI with vibrant orange accents.
+- **Zero-Latency Audio**: Pre-loaded High-Quality White/Pink/Brown noise.
+- **Keyboard First**: Navigate sessions instantly with arrow keys.
+
+![Stats](./client/public/screenshots/stats_dashboard.png)
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Framework**: [React 19](https://react.dev/)
-- **Runtime**: [Electron](https://www.electronjs.org/)
-- **Build Tool**: [Vite](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components**: [Radix UI](https://www.radix-ui.com/), [Lucide React](https://lucide.dev/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+<div align="center">
+
+![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Electron](https://img.shields.io/badge/Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+
+</div>
 
 ## 🚀 Getting Started
 
-1. **Install dependencies**:
-   ```bash
-   pnpm install
-   ```
+```bash
+# Install dependencies
+pnpm install
 
-2. **Run in Development**:
-   ```bash
-   pnpm dev
-   ```
+# Run in Development
+pnpm dev
 
-3. **Build for Production**:
-   ```bash
-   pnpm build
-   ```
+# Build for Production
+pnpm build
+```
 
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.

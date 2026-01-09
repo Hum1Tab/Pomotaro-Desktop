@@ -2,7 +2,7 @@
   "name": "pomotaro",
   "description": "Pomodoro timer with character interaction",
   "author": "User",
-  "version": "1.1.24",
+  "version": "1.1.25",
   "type": "module",
   "main": "dist-electron/main.cjs",
   "license": "MIT",
@@ -128,7 +128,8 @@
     },
     "win": {
       "target": [
-        "nsis"
+        "nsis",
+        "zip"
       ],
       "icon": "icon_release.ico"
     },

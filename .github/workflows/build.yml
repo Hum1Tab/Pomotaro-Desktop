@@ -33,7 +33,7 @@ jobs:
       - name: Build Installer
         # GitHub Actions has no network restrictions, so we can let it rebuild if needed
         # -p always triggers the publish process defined in package.json
-        run: npx electron-builder --win nsis -p always
+        run: npx electron-builder --win -p always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
