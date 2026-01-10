@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useRef, ReactNode, useMemo } from
 import { usePomodoroPersistence } from '@/hooks/pomodoro/usePomodoroPersistence';
 import { usePomodoroTimer } from '@/hooks/pomodoro/usePomodoroTimer';
 import { useDiscordRPC } from '@/hooks/pomodoro/useDiscordRPC';
+import { SessionType } from '@/types/session';
+
+export type { SessionType };
 
 export interface PomodoroSettings {
     pomodoroTime: number; // minutes
@@ -24,8 +27,6 @@ export interface PomodoroSettings {
     rpcTextCategoryWorkingSuffix: string;
     rpcTextCategoryBreakingSuffix: string;
 }
-
-export type SessionType = 'pomodoro' | 'shortBreak' | 'longBreak';
 
 interface PomodoroContextType {
     settings: PomodoroSettings;

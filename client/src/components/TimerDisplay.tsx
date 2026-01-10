@@ -2,6 +2,7 @@ import { SessionType, usePomodoro } from '@/hooks/usePomodoro';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAppearance } from '@/contexts/AppearanceContext'; // Added
 import { cn } from '@/lib/utils';
+import { TIMER_SIZES } from '@/const/uiSizes';
 
 
 interface TimerDisplayProps {
@@ -15,6 +16,8 @@ export function TimerDisplay({ timeLeft, sessionType, className }: TimerDisplayP
     const { settings: appearanceSettings } = useAppearance(); // Added
     const { t } = useLanguage();
 
+    // #8: サイズ設定を外部化した定数から取得
+    const sizes = appearanceSettings.isCompact ? TIMER_SIZES.compact : TIMER_SIZES.normal;
 
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
@@ -47,7 +50,7 @@ export function TimerDisplay({ timeLeft, sessionType, className }: TimerDisplayP
             {/* Circular Progress */}
             <div className={cn(
                 "relative transition-all duration-500",
-                appearanceSettings.isCompact ? "w-[180px] h-[180px]" : "w-[300px] h-[300px] sm:w-[400px] sm:h-[400px]"
+                sizes.container
             )}>
 
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -80,13 +83,13 @@ export function TimerDisplay({ timeLeft, sessionType, className }: TimerDisplayP
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <div className={cn(
                         "font-light tabular-nums tracking-tighter text-white drop-shadow-lg transition-all",
-                        appearanceSettings.isCompact ? "text-4xl" : "text-6xl sm:text-8xl"
+                        sizes.time
                     )}>
                         {formatTime(minutes)}:{formatTime(seconds)}
                     </div>
                     <div className={cn(
                         "font-medium text-white/80 mt-1 tracking-widest uppercase transition-all",
-                        appearanceSettings.isCompact ? "text-[10px]" : "text-lg sm:text-xl"
+                        sizes.label
                     )}>
                         {sessionType === 'pomodoro' ? 'FOCUS' : 'BREAK'}
                     </div>

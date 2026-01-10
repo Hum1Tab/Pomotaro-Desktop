@@ -1,38 +1,22 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { SessionType, SessionRecord, DailyStats, StatsMap } from '@/types/session';
 
-export type SessionType = 'pomodoro' | 'shortBreak' | 'longBreak';
+export type { SessionType, SessionRecord, DailyStats, StatsMap };
 
-export interface SessionRecord {
-    id: string;
-    duration: number; // in seconds
-    timestamp: string; // ISO string
-    sessionType: SessionType;
-    taskName?: string;
-    categoryId?: string;
-    categoryName?: string;
-}
-
-export interface DailyStats {
-    date: string;
-    totalFocusTime: number; // in seconds
-    pomodoroCount: number;
-    totalBreakTime: number;
-    sessions: SessionRecord[];
-}
-
-export interface StatsMap {
-    [key: string]: DailyStats;
-}
+// 記録ツール設定: 履歴データは無期限保持
+// 注意: localStorageの容量制限（約5-10MB）に注意
+const STORAGE_KEY = 'pomotaro-sessions';
 
 export function useSessionHistory() {
     const [history, setHistory] = useState<SessionRecord[]>([]);
 
-    // Load history from localStorage on mount
+    // Load history from localStorage on mount (無期限保持)
     useEffect(() => {
-        const saved = localStorage.getItem('pomotaro-sessions');
+        const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             try {
-                setHistory(JSON.parse(saved));
+                const parsed = JSON.parse(saved) as SessionRecord[];
+                setHistory(parsed);
             } catch (e) {
                 console.error('Failed to parse session history', e);
             }
@@ -59,10 +43,48 @@ export function useSessionHistory() {
 
         setHistory(prev => {
             const updated = [newSession, ...prev];
-            localStorage.setItem('pomotaro-sessions', JSON.stringify(updated));
+            const jsonData = JSON.stringify(updated);
+            localStorage.setItem(STORAGE_KEY, jsonData);
+
+            // 記録ツール: セッション終了ごとにファイルへ自動バックアップ
+            if (window.electronAPI?.saveSessionBackup) {
+                window.electronAPI.saveSessionBackup(jsonData).catch(err => {
+                    console.error('Failed to save session backup:', err);
+                });
+            }
+
             return updated;
         });
     }, []);
+
+    // #15: セッション履歴をJSONでエクスポート（記録ツール機能）
+    const exportSessions = useCallback((): string => {
+        return JSON.stringify(history, null, 2);
+    }, [history]);
+
+    // 記録ツール: セッション履歴をインポート（マージ）
+    const importSessions = useCallback((jsonData: string): boolean => {
+        try {
+            const imported = JSON.parse(jsonData) as SessionRecord[];
+            if (!Array.isArray(imported)) return false;
+
+            setHistory(prev => {
+                // 既存のIDを持つセッションは除外してマージ
+                const existingIds = new Set(prev.map(s => s.id));
+                const newSessions = imported.filter(s => !existingIds.has(s.id));
+                const merged = [...newSessions, ...prev];
+                // 日付順にソート（新しい順）
+                merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+                return merged;
+            });
+            return true;
+        } catch (e) {
+            console.error('Failed to import sessions', e);
+            return false;
+        }
+    }, []);
+
 
     // Optimization: Create a cache map indexed by date "YYYY-MM-DD"
     // Complexity: O(N) - iterates history once when it changes.
@@ -195,6 +217,9 @@ export function useSessionHistory() {
         getWeeklyStats,
         getMonthlyStats,
         getYearlyStats,
-        getTotalStats
+        getTotalStats,
+        // #15: 記録ツール用のエクスポート/インポート機能
+        exportSessions,
+        importSessions,
     };
 }

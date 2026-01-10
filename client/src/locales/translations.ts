@@ -193,6 +193,14 @@ export const translations: Translations = {
         // Other Settings
         'settings.showTaskInput': 'Show Task Input',
         'settings.alwaysOnTop': 'Always on Top',
+
+        // Auto Update
+        'update.available': 'New version found. Starting download...',
+        'update.downloaded': 'Download complete. Restart when ready.',
+        'update.error': 'Update error: ',
+        'update.restartPrompt': 'A new version is available',
+        'update.restartDesc': 'Restart to apply the update?',
+        'update.restart': 'Restart',
     },
     ja: {
         // Header & Settings
@@ -380,5 +388,13 @@ export const translations: Translations = {
         // Other Settings
         'settings.showTaskInput': 'タスク入力を表示',
         'settings.alwaysOnTop': '常に手前に表示',
+
+        // Auto Update
+        'update.available': '新しいバージョンが見つかりました。ダウンロードを開始します...',
+        'update.downloaded': 'ダウンロード完了。準備ができたら再起動してください。',
+        'update.error': 'アップデートエラー: ',
+        'update.restartPrompt': '新しいバージョンが利用可能です',
+        'update.restartDesc': '再起動して更新を適用しますか？',
+        'update.restart': '再起動',
     }
 };

@@ -108,20 +108,21 @@ function createWindow() {
 
         autoUpdater.on('update-available', () => {
             if (mainWindow?.isDestroyed()) return;
-            mainWindow?.webContents.send('update-status', '新しいバージョンが見つかりました。ダウンロードを開始します...');
+            // 翻訳キーを送信（レンダラー側で翻訳）
+            mainWindow?.webContents.send('update-status', { key: 'update.available' });
         });
 
         // Modification: Do not quit automatically. Notify renderer to show button.
         autoUpdater.on('update-downloaded', () => {
             if (mainWindow?.isDestroyed()) return;
-            mainWindow?.webContents.send('update-status', 'ダウンロード完了。準備ができたら再起動してください。');
+            mainWindow?.webContents.send('update-status', { key: 'update.downloaded' });
             mainWindow?.webContents.send('update-downloaded');
         });
 
         autoUpdater.on('error', (err) => {
             console.error('Auto update error:', err);
             if (mainWindow?.isDestroyed()) return;
-            mainWindow?.webContents.send('update-error', `アップデートエラー: ${err.message}`);
+            mainWindow?.webContents.send('update-error', { key: 'update.error', message: err.message });
         });
 
     }
@@ -174,10 +175,19 @@ function createWindow() {
 
 // Global flag to track if we are quitting or just closing window
 let isQuitting = false;
+let powerSaveBlockerId: number | null = null;
 
 app.on('before-quit', () => {
     isQuitting = true;
     saveWindowState();
+});
+
+app.on('quit', () => {
+    // #7: powerSaveBlockerのメモリリーク対策
+    if (powerSaveBlockerId !== null) {
+        powerSaveBlocker.stop(powerSaveBlockerId);
+        powerSaveBlockerId = null;
+    }
 });
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -212,19 +222,48 @@ app.on('activate', () => {
     }
 });
 
-// Discord RPC Initialization
+// #6: Discord RPC Initialization with reconnect logic
+const RPC_RECONNECT_INTERVAL = 30000; // 30秒ごとに再接続を試みる
+let rpcReconnectTimer: NodeJS.Timeout | null = null;
+
 function initDiscordRpc() {
+    // 既存のタイマーをクリア
+    if (rpcReconnectTimer) {
+        clearInterval(rpcReconnectTimer);
+        rpcReconnectTimer = null;
+    }
+
     rpc = new DiscordRPC.Client({ transport: 'ipc' });
 
     rpc.on('ready', () => {
+        console.log('Discord RPC connected');
         setActivity();
+        // 接続成功時は再接続タイマーをクリア
+        if (rpcReconnectTimer) {
+            clearInterval(rpcReconnectTimer);
+            rpcReconnectTimer = null;
+        }
     });
 
     // Handle potential connection errors gracefully
     rpc.login({ clientId }).catch(err => {
         console.log('Discord RPC connection failed (Discord might be closed):', err.message);
         rpc = null;
+        // #6: 再接続タイマーを開始
+        scheduleRpcReconnect();
     });
+}
+
+// #6: Discord RPCの再接続をスケジュール
+function scheduleRpcReconnect() {
+    if (rpcReconnectTimer) return; // 既にスケジュールされている場合はスキップ
+
+    rpcReconnectTimer = setInterval(() => {
+        if (!rpc) {
+            console.log('Attempting Discord RPC reconnection...');
+            initDiscordRpc();
+        }
+    }, RPC_RECONNECT_INTERVAL);
 }
 
 
@@ -244,7 +283,6 @@ function setActivity() {
     });
 }
 
-// IPC Handlers
 // IPC Handlers
 ipcMain.handle('open-external', (_, url) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -340,7 +378,6 @@ ipcMain.handle('get-auto-launch', () => {
 
 
 // 6. Power Save Blocker Handler
-let powerSaveBlockerId: number | null = null;
 
 ipcMain.handle('set-power-save-blocker', (_, enabled) => {
     if (enabled) {
@@ -355,3 +392,41 @@ ipcMain.handle('set-power-save-blocker', (_, enabled) => {
     }
 });
 
+// 7. 記録ツール: セッションバックアップをファイルに保存
+const backupDir = path.join(app.getPath('userData'), 'session-backups');
+
+// バックアップディレクトリを作成
+if (!fs.existsSync(backupDir)) {
+    fs.mkdirSync(backupDir, { recursive: true });
+}
+
+ipcMain.handle('save-session-backup', (_, sessionsJson: string) => {
+    try {
+        // 常に同じファイル名で上書き（最新のバックアップのみ保持）
+        const backupPath = path.join(backupDir, 'pomotaro-sessions-backup.json');
+        fs.writeFileSync(backupPath, sessionsJson, 'utf8');
+        console.log('Session backup saved:', backupPath);
+        return { success: true, path: backupPath };
+    } catch (e) {
+        console.error('Failed to save session backup:', e);
+        return { success: false, error: (e as Error).message };
+    }
+});
+
+ipcMain.handle('load-session-backup', () => {
+    try {
+        const backupPath = path.join(backupDir, 'pomotaro-sessions-backup.json');
+        if (fs.existsSync(backupPath)) {
+            const data = fs.readFileSync(backupPath, 'utf8');
+            return { success: true, data };
+        }
+        return { success: false, error: 'Backup file not found' };
+    } catch (e) {
+        console.error('Failed to load session backup:', e);
+        return { success: false, error: (e as Error).message };
+    }
+});
+
+ipcMain.handle('get-backup-path', () => {
+    return path.join(backupDir, 'pomotaro-sessions-backup.json');
+});

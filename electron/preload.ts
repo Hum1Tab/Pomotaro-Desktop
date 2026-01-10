@@ -31,5 +31,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
     setPowerSaveBlocker: (enabled: boolean) => ipcRenderer.invoke('set-power-save-blocker', enabled),
     checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    // 記録ツール: セッションバックアップ機能
+    saveSessionBackup: (sessionsJson: string) => ipcRenderer.invoke('save-session-backup', sessionsJson),
+    loadSessionBackup: () => ipcRenderer.invoke('load-session-backup'),
+    getBackupPath: () => ipcRenderer.invoke('get-backup-path'),
 });
 

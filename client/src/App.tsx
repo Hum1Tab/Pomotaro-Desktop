@@ -1,13 +1,9 @@
 import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 
 import ErrorBoundary from "./components/ErrorBoundary";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import { SoundProvider } from "./contexts/SoundContext";
-import { WhiteNoiseProvider } from "./contexts/WhiteNoiseContext";
-import { AppearanceProvider } from "./contexts/AppearanceContext";
-import { PomodoroProvider } from "./contexts/PomodoroContext";
+import ComponentErrorBoundary from "./components/ComponentErrorBoundary";
+import { AppProviders } from "./components/AppProviders";
 import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 
@@ -25,6 +21,19 @@ const FrozenRouter = ({ children, location, navigate }: { children: React.ReactN
   return <WouterRouter hook={staticHook}>{children}</WouterRouter>;
 };
 
+// ページコンポーネントをErrorBoundaryでラップ
+const SafeHome = () => (
+  <ComponentErrorBoundary>
+    <Home />
+  </ComponentErrorBoundary>
+);
+
+const SafeSettings = () => (
+  <ComponentErrorBoundary>
+    <Settings />
+  </ComponentErrorBoundary>
+);
+
 function AnimatedRoutes() {
   const [location, navigate] = useLocation();
 
@@ -40,8 +49,8 @@ function AnimatedRoutes() {
       >
         <FrozenRouter location={location} navigate={navigate}>
           <Switch>
-            <Route path={"/"} component={Home} />
-            <Route path={"/settings"} component={Settings} />
+            <Route path={"/"} component={SafeHome} />
+            <Route path={"/settings"} component={SafeSettings} />
             <Route path={"/404"} component={NotFound} />
             {/* Final fallback route */}
             <Route component={NotFound} />
@@ -69,23 +78,32 @@ function Router() {
 
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { useLanguage } from "./hooks/useLanguage";
 
 function App() {
+  const { t } = useLanguage();
+
   useEffect(() => {
     if (window.electronAPI) {
-      window.electronAPI.onUpdateStatus((message) => {
+      window.electronAPI.onUpdateStatus((data: string | { key: string }) => {
+        // 翻訳キーの場合は翻訳、そうでなければそのまま表示（後方互換性）
+        const message = typeof data === 'object' && data.key ? t(data.key) : String(data);
         toast.info(message);
       });
 
-      window.electronAPI.onUpdateError((message) => {
+      window.electronAPI.onUpdateError((data: string | { key: string; message?: string }) => {
+        // 翻訳キーの場合は翻訳してエラーメッセージを付加
+        const message = typeof data === 'object' && data.key
+          ? t(data.key) + (data.message || '')
+          : String(data);
         toast.error(message);
       });
 
       window.electronAPI.onUpdateDownloaded(() => {
-        toast("新しいバージョンが利用可能です", {
-          description: "再起動して更新を適用しますか？",
+        toast(t('update.restartPrompt'), {
+          description: t('update.restartDesc'),
           action: {
-            label: "再起動",
+            label: t('update.restart'),
             onClick: () => window.electronAPI?.restartApp(),
           },
           duration: Infinity, // Keep it visible
@@ -97,27 +115,14 @@ function App() {
         window.electronAPI?.checkForUpdates();
       }, 2000);
     }
-  }, []);
+  }, [t]);
 
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-      // switchable
-      >
-        <TooltipProvider>
-          <SoundProvider>
-            <WhiteNoiseProvider>
-              <AppearanceProvider>
-                <PomodoroProvider>
-                  <Toaster />
-                  <Router />
-                </PomodoroProvider>
-              </AppearanceProvider>
-            </WhiteNoiseProvider>
-          </SoundProvider>
-        </TooltipProvider>
-      </ThemeProvider>
+      <AppProviders>
+        <Toaster />
+        <Router />
+      </AppProviders>
     </ErrorBoundary>
   );
 }

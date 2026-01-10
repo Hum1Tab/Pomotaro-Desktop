@@ -20,5 +20,9 @@ interface Window {
         getAutoLaunch: () => Promise<boolean>;
         setPowerSaveBlocker: (enabled: boolean) => Promise<void>;
         checkForUpdates: () => Promise<any>;
+        // 記録ツール: セッションバックアップ
+        saveSessionBackup: (sessionsJson: string) => Promise<{ success: boolean; path?: string; error?: string }>;
+        loadSessionBackup: () => Promise<{ success: boolean; data?: string; error?: string }>;
+        getBackupPath: () => Promise<string>;
     };
 }

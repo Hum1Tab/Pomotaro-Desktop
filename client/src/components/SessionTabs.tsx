@@ -18,7 +18,11 @@ export function SessionTabs({ currentSession, onSessionChange }: SessionTabsProp
     ];
 
     return (
-        <div className="flex p-1 bg-black/20 backdrop-blur-lg rounded-full border border-white/10 shadow-inner">
+        <div
+            className="flex p-1 bg-black/20 backdrop-blur-lg rounded-full border border-white/10 shadow-inner"
+            role="tablist"
+            aria-label={t('timer.sessionType') || 'セッションタイプ'}
+        >
             {tabs.map((tab) => {
                 const isActive = currentSession === tab.type;
                 const Icon = tab.icon;
@@ -27,6 +31,10 @@ export function SessionTabs({ currentSession, onSessionChange }: SessionTabsProp
                     <button
                         key={tab.type}
                         onClick={() => onSessionChange(tab.type)}
+                        role="tab"
+                        aria-selected={isActive}
+                        aria-label={tab.label}
+                        title={tab.label}
                         className={`
                             relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 z-10
                             ${isActive ? 'text-primary-foreground' : 'text-white/60 hover:text-white/90 hover:bg-white/5'}
@@ -39,7 +47,7 @@ export function SessionTabs({ currentSession, onSessionChange }: SessionTabsProp
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                             />
                         )}
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-4 h-4" aria-hidden="true" />
                         <span className="hidden sm:inline">{tab.label}</span>
                     </button>
                 );
