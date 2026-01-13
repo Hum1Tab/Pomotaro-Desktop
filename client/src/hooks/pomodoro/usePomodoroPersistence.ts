@@ -30,44 +30,48 @@ interface TimerState {
     timeLeft: number;
 }
 
+// 同期的にlocalStorageから初期値を読み込むヘルパー関数
+function loadInitialSettings(): PomodoroSettings {
+    try {
+        const saved = localStorage.getItem('pomodoroSettings');
+        if (saved) {
+            return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+        }
+    } catch (error) {
+        console.error('Failed to load initial settings:', error);
+    }
+    return DEFAULT_SETTINGS;
+}
+
+function loadInitialSessions(): number {
+    try {
+        const saved = localStorage.getItem('sessionsCompleted');
+        if (saved) {
+            return parseInt(saved, 10);
+        }
+    } catch (error) {
+        console.error('Failed to load initial sessions:', error);
+    }
+    return 0;
+}
+
+function loadInitialTimerState(): TimerState | null {
+    try {
+        const saved = localStorage.getItem('pomodoroTimerState');
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (error) {
+        console.error('Failed to load initial timer state:', error);
+    }
+    return null;
+}
+
 export function usePomodoroPersistence() {
-    const [settings, setSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
-    const [sessionsCompleted, setSessionsCompleted] = useState(0);
-    const [restoredState, setRestoredState] = useState<TimerState | null>(null);
-
-    // Initial Load
-    useEffect(() => {
-        // Load Settings
-        const savedSettings = localStorage.getItem('pomodoroSettings');
-        if (savedSettings) {
-            try {
-                const parsed = JSON.parse(savedSettings);
-                setSettings({ ...DEFAULT_SETTINGS, ...parsed });
-            } catch (error) {
-                console.error('Failed to load settings:', error);
-            }
-        }
-
-        // Load Sessions
-        const savedSessions = localStorage.getItem('sessionsCompleted');
-        if (savedSessions) {
-            try {
-                setSessionsCompleted(parseInt(savedSessions));
-            } catch (error) {
-                console.error('Failed to load sessions:', error);
-            }
-        }
-
-        // Load Timer State
-        const savedTimerState = localStorage.getItem('pomodoroTimerState');
-        if (savedTimerState) {
-            try {
-                setRestoredState(JSON.parse(savedTimerState));
-            } catch (e) {
-                console.error('Failed to restore timer state', e);
-            }
-        }
-    }, []);
+    // 同期的な初期化でlocalStorageから値を読み込む
+    const [settings, setSettings] = useState<PomodoroSettings>(loadInitialSettings);
+    const [sessionsCompleted, setSessionsCompleted] = useState(loadInitialSessions);
+    const [restoredState] = useState<TimerState | null>(loadInitialTimerState);
 
     // Save Settings
     useEffect(() => {
