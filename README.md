@@ -1,7 +1,9 @@
 # Pomotaro 🍑
 
 ![Pomotaro](./client/public/screenshots/readme-header.png)
-
+<div align="center">
+  <img src="https://count.getloli.com/get/@Hum1tab?theme=moebooru" alt="訪問者カウンター" />
+</div>
 <div align="center">
 
 [![Latest Release](https://img.shields.io/github/v/release/Hum1Tab/Pomotaro-Desktop?style=for-the-badge&color=orange)](https://github.com/Hum1Tab/Pomotaro-Desktop/releases/latest)
