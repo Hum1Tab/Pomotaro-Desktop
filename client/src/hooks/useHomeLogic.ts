@@ -173,3 +173,5 @@ export function useHomeLogic() {
         currentCompact
     };
 }
+
+export type HomeLogic = ReturnType<typeof useHomeLogic>;
