@@ -14,7 +14,7 @@
     "electron:build": "npm run build && electron-builder",
     "start": "electron .",
     "preview": "vite preview --host",
-    "check": "tsc --noEmit",
+    "check": "tsc --noEmit && tsc --project tsconfig.electron.json",
     "format": "prettier --write ."
   },
   "dependencies": {
