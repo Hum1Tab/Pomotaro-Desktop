@@ -112,7 +112,9 @@ function App() {
 
       // Check for updates on startup (delayed slightly to ensure UI is ready)
       const updateTimer = window.setTimeout(() => {
-        window.desktopAPI?.checkForUpdates();
+        window.desktopAPI?.checkForUpdates().catch((error) => {
+          console.error('Failed to check for updates:', error);
+        });
       }, 2000);
 
       return () => {

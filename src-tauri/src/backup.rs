@@ -96,7 +96,9 @@ pub fn load(app: &AppHandle) -> SessionBackupResult {
             }
             SessionBackupResult {
                 success: true,
-                path: Some(current_path(app).map(|p| p.to_string_lossy().into_owned()).ok()),
+                path: current_path(app)
+                    .ok()
+                    .map(|p| p.to_string_lossy().into_owned()),
                 data: Some(data),
                 error: None,
             }
