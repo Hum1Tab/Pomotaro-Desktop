@@ -10,17 +10,51 @@ const STORAGE_KEY = 'pomotaro-sessions';
 export function useSessionHistory() {
     const [history, setHistory] = useState<SessionRecord[]>([]);
 
-    // Load history from localStorage on mount (無期限保持)
+    // Load history from localStorage on mount (無期限保持).
+    // When localStorage is still empty (first Tauri launch), import the
+    // automatic backup written by the previous Electron build.
     useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved) as SessionRecord[];
-                setHistory(parsed);
-            } catch (e) {
-                console.error('Failed to parse session history', e);
+        let cancelled = false;
+
+        const load = async () => {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved) as SessionRecord[];
+                    if (!cancelled) setHistory(parsed);
+                    return;
+                } catch (e) {
+                    console.error('Failed to parse session history', e);
+                }
             }
-        }
+
+            const api = window.desktopAPI;
+            if (!api) return;
+
+            let backup;
+            try {
+                backup = await api.loadSessionBackup();
+            } catch (error) {
+                console.error('Failed to load session backup:', error);
+                return;
+            }
+
+            if (cancelled || !backup.success || !backup.data) return;
+
+            try {
+                const parsed = JSON.parse(backup.data) as SessionRecord[];
+                if (!Array.isArray(parsed)) return;
+                localStorage.setItem(STORAGE_KEY, backup.data);
+                if (!cancelled) setHistory(parsed);
+            } catch (e) {
+                console.error('Failed to import session backup:', e);
+            }
+        };
+
+        void load();
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     const addSession = useCallback((
@@ -47,8 +81,8 @@ export function useSessionHistory() {
             localStorage.setItem(STORAGE_KEY, jsonData);
 
             // 記録ツール: セッション終了ごとにファイルへ自動バックアップ
-            if (window.electronAPI?.saveSessionBackup) {
-                window.electronAPI.saveSessionBackup(jsonData).catch(err => {
+            if (window.desktopAPI?.saveSessionBackup) {
+                window.desktopAPI.saveSessionBackup(jsonData).catch(err => {
                     console.error('Failed to save session backup:', err);
                 });
             }

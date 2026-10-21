@@ -21,11 +21,16 @@ export interface DiscordActivity {
   largeImageText?: string;
   smallImageKey?: string;
   smallImageText?: string;
+  // Renderer-only metadata; it is deliberately omitted before calling Discord.
   sessionType?: string;
   sessionsCompleted?: number;
 }
 
-export interface ElectronAPI {
+/**
+ * Contract for the native bridge exposed by the Tauri backend.
+ * Every method maps to a Rust `#[tauri::command]` or a Tauri event.
+ */
+export interface DesktopAPI {
   updateActivity(activity: DiscordActivity): Promise<void>;
   clearActivity(): Promise<void>;
   setProgressBar(progress: number): Promise<void>;
@@ -43,8 +48,10 @@ export interface ElectronAPI {
   setAutoLaunch(enabled: boolean): Promise<void>;
   getAutoLaunch(): Promise<boolean>;
   setPowerSaveBlocker(enabled: boolean): Promise<void>;
-  checkForUpdates(): Promise<unknown>;
+  /** Returns the new version when one was downloaded, or null when up to date. */
+  checkForUpdates(): Promise<string | null>;
   saveSessionBackup(sessionsJson: string): Promise<SessionBackupResult>;
   loadSessionBackup(): Promise<SessionBackupResult>;
   getBackupPath(): Promise<string>;
+  sendNotification(title: string, body: string): Promise<void>;
 }

@@ -84,14 +84,14 @@ function App() {
   const { t } = useLanguage();
 
   useEffect(() => {
-    if (window.electronAPI) {
-      window.electronAPI.onUpdateStatus((data: string | { key: string }) => {
+    if (window.desktopAPI) {
+      const unsubscribeStatus = window.desktopAPI.onUpdateStatus((data) => {
         // 翻訳キーの場合は翻訳、そうでなければそのまま表示（後方互換性）
         const message = typeof data === 'object' && data.key ? t(data.key) : String(data);
         toast.info(message);
       });
 
-      window.electronAPI.onUpdateError((data: string | { key: string; message?: string }) => {
+      const unsubscribeError = window.desktopAPI.onUpdateError((data) => {
         // 翻訳キーの場合は翻訳してエラーメッセージを付加
         const message = typeof data === 'object' && data.key
           ? t(data.key) + (data.message || '')
@@ -99,21 +99,28 @@ function App() {
         toast.error(message);
       });
 
-      window.electronAPI.onUpdateDownloaded(() => {
+      const unsubscribeDownloaded = window.desktopAPI.onUpdateDownloaded(() => {
         toast(t('update.restartPrompt'), {
           description: t('update.restartDesc'),
           action: {
             label: t('update.restart'),
-            onClick: () => window.electronAPI?.restartApp(),
+            onClick: () => window.desktopAPI?.restartApp(),
           },
           duration: Infinity, // Keep it visible
         });
       });
 
       // Check for updates on startup (delayed slightly to ensure UI is ready)
-      setTimeout(() => {
-        window.electronAPI?.checkForUpdates();
+      const updateTimer = window.setTimeout(() => {
+        window.desktopAPI?.checkForUpdates();
       }, 2000);
+
+      return () => {
+        unsubscribeStatus();
+        unsubscribeError();
+        unsubscribeDownloaded();
+        window.clearTimeout(updateTimer);
+      };
     }
   }, [t]);
 
@@ -128,5 +135,4 @@ function App() {
 }
 
 export default App;
-
 

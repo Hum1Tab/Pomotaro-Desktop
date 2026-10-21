@@ -59,8 +59,8 @@ export function useHomeLogic() {
 
     // Handle Focus Mode Enter/Exit for Fullscreen
     useEffect(() => {
-        if (window.electronAPI && window.electronAPI.toggleFullscreen) {
-            window.electronAPI.toggleFullscreen(isFocusMode);
+        if (window.desktopAPI && window.desktopAPI.toggleFullscreen) {
+            window.desktopAPI.toggleFullscreen(isFocusMode);
         }
     }, [isFocusMode]);
 
@@ -69,20 +69,20 @@ export function useHomeLogic() {
 
     useEffect(() => {
         const syncSize = async () => {
-            if (window.electronAPI?.setWindowSize && window.electronAPI.isMaximized) {
-                const maximized = await window.electronAPI.isMaximized();
+            if (window.desktopAPI?.setWindowSize && window.desktopAPI.isMaximized) {
+                const maximized = await window.desktopAPI.isMaximized();
 
                 if (appearanceSettings.isCompact) {
                     // Entering or staying in compact mode
-                    window.electronAPI.setWindowSize(300, 450);
-                    window.electronAPI.setAlwaysOnTop(true);
+                    window.desktopAPI.setWindowSize(300, 450);
+                    window.desktopAPI.setAlwaysOnTop(true);
                 } else if (currentCompact !== appearanceSettings.isCompact && !maximized) {
                     // ONLY restore default size if we just EXITED compact mode
-                    window.electronAPI.setWindowSize(1200, 800);
-                    window.electronAPI.setAlwaysOnTop(pomodoro.settings.alwaysOnTop);
+                    window.desktopAPI.setWindowSize(1200, 800);
+                    window.desktopAPI.setAlwaysOnTop(pomodoro.settings.alwaysOnTop);
                 } else {
                     // Just sync always on top without resizing
-                    window.electronAPI.setAlwaysOnTop(pomodoro.settings.alwaysOnTop);
+                    window.desktopAPI.setAlwaysOnTop(pomodoro.settings.alwaysOnTop);
                 }
                 setCurrentCompact(appearanceSettings.isCompact);
             }
@@ -135,12 +135,12 @@ export function useHomeLogic() {
 
     const goToSettings = async () => {
         sound.playClickSound();
-        if (window.electronAPI?.setWindowSize && window.electronAPI.isMaximized) {
-            const maximized = await window.electronAPI.isMaximized();
+        if (window.desktopAPI?.setWindowSize && window.desktopAPI.isMaximized) {
+            const maximized = await window.desktopAPI.isMaximized();
             if (!maximized && currentCompact) {
-                await window.electronAPI.setWindowSize(1200, 800);
+                await window.desktopAPI.setWindowSize(1200, 800);
             }
-            await window.electronAPI.setAlwaysOnTop(false);
+            await window.desktopAPI.setAlwaysOnTop(false);
         }
         setLocation('/settings');
     };

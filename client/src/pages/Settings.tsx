@@ -19,12 +19,12 @@ export default function Settings() {
     // Ensure settings page is large enough to be readable
     useEffect(() => {
         const syncSize = async () => {
-            if (window.electronAPI?.setWindowSize && window.electronAPI.isMaximized) {
-                const maximized = await window.electronAPI.isMaximized();
+            if (window.desktopAPI?.setWindowSize && window.desktopAPI.isMaximized) {
+                const maximized = await window.desktopAPI.isMaximized();
                 if (!maximized) {
                     // Check if current window is too small (e.g. from compact mode)
                 }
-                window.electronAPI.setAlwaysOnTop(false);
+                window.desktopAPI.setAlwaysOnTop(false);
             }
         };
         syncSize();

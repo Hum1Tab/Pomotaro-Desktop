@@ -22,15 +22,15 @@ export function SettingsGeneral() {
     const [updateCheckMessage, setUpdateCheckMessage] = useState<string | null>(null);
 
     useEffect(() => {
-        if (window.electronAPI?.getAutoLaunch) {
-            window.electronAPI.getAutoLaunch().then(setIsAutoLaunch);
+        if (window.desktopAPI?.getAutoLaunch) {
+            window.desktopAPI.getAutoLaunch().then(setIsAutoLaunch);
         }
     }, []);
 
     const toggleAutoLaunch = async (checked: boolean) => {
         setIsAutoLaunch(checked);
-        if (window.electronAPI?.setAutoLaunch) {
-            await window.electronAPI.setAutoLaunch(checked);
+        if (window.desktopAPI?.setAutoLaunch) {
+            await window.desktopAPI.setAutoLaunch(checked);
         }
     };
 
@@ -103,7 +103,7 @@ export function SettingsGeneral() {
                     checked={pomoSettings.alwaysOnTop}
                     onCheckedChange={(checked) => {
                         updatePomoSettings({ ...pomoSettings, alwaysOnTop: checked });
-                        window.electronAPI?.setAlwaysOnTop(checked);
+                        window.desktopAPI?.setAlwaysOnTop(checked);
                     }}
                 />
             </div>
@@ -256,7 +256,7 @@ export function SettingsGeneral() {
                 <Button
                     variant="outline"
                     className="w-full gap-2 text-pink-500 hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-950/30 border-pink-200 dark:border-pink-900"
-                    onClick={() => window.electronAPI ? window.electronAPI.openExternal('https://github.com/sponsors/Hum1Tab') : window.open('https://github.com/sponsors/Hum1Tab', '_blank')}
+                    onClick={() => window.desktopAPI ? window.desktopAPI.openExternal('https://github.com/sponsors/Hum1Tab') : window.open('https://github.com/sponsors/Hum1Tab', '_blank')}
                 >
                     <Heart className="w-4 h-4 fill-current" /> {t('settings.support.github')}
                 </Button>
@@ -271,16 +271,15 @@ export function SettingsGeneral() {
                     className="w-full gap-2"
                     disabled={updateCheckStatus === 'checking'}
                     onClick={async () => {
-                        if (window.electronAPI?.checkForUpdates) {
+                        if (window.desktopAPI?.checkForUpdates) {
                             setUpdateCheckStatus('checking');
                             setUpdateCheckMessage(null);
                             try {
-                                const result = await window.electronAPI.checkForUpdates() as any;
-                                if (result && result.updateInfo) {
-                                    setUpdateCheckMessage(`チェック完了: v${result.updateInfo.version}`);
-
+                                const version = await window.desktopAPI.checkForUpdates();
+                                setUpdateCheckStatus('idle');
+                                if (version) {
+                                    setUpdateCheckMessage(`チェック完了: v${version}`);
                                 } else {
-                                    setUpdateCheckStatus('idle');
                                     setUpdateCheckMessage('最新です');
                                 }
                             } catch (e) {

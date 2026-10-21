@@ -19,12 +19,12 @@ export function useDiscordRPC({
     getSessionDuration
 }: UseDiscordRPCProps) {
     useEffect(() => {
-        if (window.electronAPI) {
+        if (window.desktopAPI) {
             const currentDuration = getSessionDuration(sessionType, settings);
 
             if (isRunning) {
                 const progress = 1 - (timeLeft / currentDuration);
-                window.electronAPI.setProgressBar(progress);
+                window.desktopAPI.setProgressBar(progress);
 
                 // Update Discord RPC if enabled
                 if (settings.enableDiscordRpc) {
@@ -54,7 +54,7 @@ export function useDiscordRPC({
                         }
                     }
 
-                    window.electronAPI.updateActivity({
+                    window.desktopAPI.updateActivity({
                         details: sessionType === 'pomodoro' ? '集中中' : '休憩中',
                         state: baseState,
                         endTimestamp,
@@ -63,12 +63,12 @@ export function useDiscordRPC({
                     });
                 } else {
                     // If RPC is disabled but was previously enabled, we might want to clear it.
-                    window.electronAPI.clearActivity();
+                    window.desktopAPI.clearActivity();
                 }
             } else {
-                window.electronAPI.setProgressBar(-1);
+                window.desktopAPI.setProgressBar(-1);
                 if (settings.enableDiscordRpc) {
-                    window.electronAPI.updateActivity({
+                    window.desktopAPI.updateActivity({
                         details: '一時停止中',
                         state: settings.rpcTextPaused || '一時停止中',
                         sessionType,

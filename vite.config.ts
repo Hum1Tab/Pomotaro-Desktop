@@ -1,28 +1,11 @@
-
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import fs from "node:fs";
 import path from "path";
 import { defineConfig } from "vite";
 
-import electron from "vite-plugin-electron/simple";
-
-const plugins = [
-  react(),
-  tailwindcss(),
-  electron({
-    main: {
-      entry: path.resolve(__dirname, "electron/main.ts"),
-    },
-    preload: {
-      input: path.resolve(__dirname, "electron/preload.ts"),
-    },
-  }),
-];
-
 export default defineConfig({
-  base: './', // Ensure relative paths for Electron
-  plugins,
+  base: './', // Tauri serves the built assets from its custom protocol
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client", "src"),
@@ -39,7 +22,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    strictPort: false, // Will find next available port if 3000 is busy
+    strictPort: true, // Must match tauri.conf.json devUrl
     host: true,
     allowedHosts: [
       ".manuspre.computer",

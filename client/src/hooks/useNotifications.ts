@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect } from 'react';
+import { desktopAPI, isDesktop } from '@/lib/desktop-api';
 
 export interface NotificationSettings {
     enabled: boolean;
@@ -16,7 +17,9 @@ const DEFAULT_SETTINGS: NotificationSettings = {
 
 export function useNotifications() {
     const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
-    const [permission, setPermission] = useState<NotificationPermission>('default');
+    const [permission, setPermission] = useState<NotificationPermission>(
+        isDesktop ? 'granted' : 'default'
+    );
 
     // Load settings from localStorage
     useEffect(() => {
@@ -29,8 +32,10 @@ export function useNotifications() {
             }
         }
 
-        // Check current permission
-        if ('Notification' in window) {
+        // Desktop notifications are always allowed by the native app.
+        if (isDesktop) {
+            setPermission('granted');
+        } else if ('Notification' in window) {
             setPermission(Notification.permission);
         }
     }, []);
@@ -41,6 +46,11 @@ export function useNotifications() {
     }, [settings]);
 
     const requestPermission = useCallback(async () => {
+        if (isDesktop) {
+            setPermission('granted');
+            return true;
+        }
+
         if (!('Notification' in window)) {
             console.warn('This browser does not support notifications');
             return false;
@@ -58,14 +68,21 @@ export function useNotifications() {
     const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
         if (!settings.enabled) return;
 
-        if (Notification.permission !== 'granted') {
+        if (isDesktop) {
+            void desktopAPI.sendNotification(title, options?.body ?? '').catch((error) => {
+                console.error('Failed to send notification:', error);
+            });
+            return;
+        }
+
+        if (!('Notification' in window) || Notification.permission !== 'granted') {
             console.warn('Notification permission not granted');
             return;
         }
 
         try {
             const notification = new Notification(title, {
-                icon: '/icon.png', // You can add a custom icon
+                icon: '/icon.png',
                 badge: '/badge.png',
                 ...options,
             });

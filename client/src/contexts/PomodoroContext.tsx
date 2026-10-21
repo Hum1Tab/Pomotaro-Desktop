@@ -138,14 +138,14 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Handle Electron Windows Features
+    // Handle desktop window features
     useEffect(() => {
-        if (window.electronAPI) {
-            if (window.electronAPI.setAlwaysOnTop) {
-                window.electronAPI.setAlwaysOnTop(settings.alwaysOnTop);
+        if (window.desktopAPI) {
+            if (window.desktopAPI.setAlwaysOnTop) {
+                window.desktopAPI.setAlwaysOnTop(settings.alwaysOnTop);
             }
-            if (window.electronAPI.setPowerSaveBlocker) {
-                window.electronAPI.setPowerSaveBlocker(isRunning && settings.preventSleep);
+            if (window.desktopAPI.setPowerSaveBlocker) {
+                window.desktopAPI.setPowerSaveBlocker(isRunning && settings.preventSleep);
             }
         }
     }, [settings.alwaysOnTop, settings.preventSleep, isRunning]);

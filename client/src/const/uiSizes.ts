@@ -19,7 +19,7 @@ export const TIMER_SIZES = {
     },
 } as const;
 
-// Electronウィンドウサイズ
+// デスクトップウィンドウサイズ
 export const WINDOW_SIZES = {
     compact: {
         width: 300,

@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Pomotaro __VERSION__'
+          releaseBody: |
+            ## Pomotaro v__VERSION__
+
+            Pomotaro is now built with **Tauri v2** instead of Electron.
+
+            ### Highlights
+            - Much smaller installer and lower memory usage.
+            - Native Discord Rich Presence, tray, auto-launch, notifications and auto-updates.
+            - Existing session history is imported automatically from the Electron data directory on first launch.
+            - Window size, position, compact mode and always-on-top continue to work as before.
+
+            ### Install
+            Download the Windows installer below. Windows 10/11 (x64) is supported.
+
+            Auto-updates are signed. Installed v1.x builds do not auto-update to v2.0.0; please install this release manually.
+          releaseDraft: false
+          prerelease: false
+          args: --bundles nsis

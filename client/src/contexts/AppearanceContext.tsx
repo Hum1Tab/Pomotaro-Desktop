@@ -81,8 +81,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
 
     // Global Window State Listener
     useEffect(() => {
-        if (window.electronAPI?.onWindowStateChanged) {
-            const cleanup = window.electronAPI.onWindowStateChanged((state: string) => {
+        if (window.desktopAPI?.onWindowStateChanged) {
+            const cleanup = window.desktopAPI.onWindowStateChanged((state: string) => {
                 setSettings(prev => {
                     if (state === 'maximized') {
                         return { ...prev, isCompact: false };

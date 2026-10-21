@@ -35,7 +35,7 @@ function loadInitialSettings(): PomodoroSettings {
     try {
         const saved = localStorage.getItem('pomodoroSettings');
         if (saved) {
-            return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+            return normalizeSettings(JSON.parse(saved));
         }
     } catch (error) {
         console.error('Failed to load initial settings:', error);
@@ -47,7 +47,8 @@ function loadInitialSessions(): number {
     try {
         const saved = localStorage.getItem('sessionsCompleted');
         if (saved) {
-            return parseInt(saved, 10);
+            const count = Number.parseInt(saved, 10);
+            return Number.isSafeInteger(count) && count >= 0 ? count : 0;
         }
     } catch (error) {
         console.error('Failed to load initial sessions:', error);
@@ -59,12 +60,45 @@ function loadInitialTimerState(): TimerState | null {
     try {
         const saved = localStorage.getItem('pomodoroTimerState');
         if (saved) {
-            return JSON.parse(saved);
+            return normalizeTimerState(JSON.parse(saved));
         }
     } catch (error) {
         console.error('Failed to load initial timer state:', error);
     }
     return null;
+}
+
+function normalizeSettings(value: unknown): PomodoroSettings {
+    const saved = value && typeof value === 'object' ? value as Partial<PomodoroSettings> : {};
+    return {
+        ...DEFAULT_SETTINGS,
+        ...saved,
+        pomodoroTime: validInteger(saved.pomodoroTime, DEFAULT_SETTINGS.pomodoroTime, 1, 720),
+        shortBreakTime: validInteger(saved.shortBreakTime, DEFAULT_SETTINGS.shortBreakTime, 1, 720),
+        longBreakTime: validInteger(saved.longBreakTime, DEFAULT_SETTINGS.longBreakTime, 1, 720),
+        longBreakInterval: validInteger(saved.longBreakInterval, DEFAULT_SETTINGS.longBreakInterval, 1, 100),
+    };
+}
+
+function normalizeTimerState(value: unknown): TimerState | null {
+    if (!value || typeof value !== 'object') return null;
+    const state = value as Partial<TimerState>;
+    const sessionType = state.sessionType;
+    if (!isSessionType(sessionType)) return null;
+    const timeLeft = state.timeLeft;
+    const expectedEndTime = state.expectedEndTime;
+    if (typeof timeLeft !== 'number' || !Number.isInteger(timeLeft) || timeLeft < 0 || timeLeft > 43_200) return null;
+    if (typeof state.isRunning !== 'boolean') return null;
+    if (expectedEndTime !== null && expectedEndTime !== undefined && (!Number.isFinite(expectedEndTime) || expectedEndTime <= 0)) return null;
+    return { isRunning: state.isRunning, sessionType, timeLeft, expectedEndTime: expectedEndTime ?? null };
+}
+
+function isSessionType(value: unknown): value is SessionType {
+    return value === 'pomodoro' || value === 'shortBreak' || value === 'longBreak';
+}
+
+function validInteger(value: unknown, fallback: number, minimum: number, maximum: number): number {
+    return typeof value === 'number' && Number.isInteger(value) && value >= minimum && value <= maximum ? value : fallback;
 }
 
 export function usePomodoroPersistence() {

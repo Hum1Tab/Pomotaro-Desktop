@@ -6,7 +6,7 @@
 
 [![Latest Release](https://img.shields.io/github/v/release/Hum1Tab/Pomotaro-Desktop?style=for-the-badge&color=orange)](https://github.com/Hum1Tab/Pomotaro-Desktop/releases/latest)
 [![License](https://img.shields.io/github/license/Hum1Tab/Pomotaro-Desktop?style=for-the-badge&color=blue)](LICENSE)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Mac%20%7C%20Linux-lightgrey?style=for-the-badge)
+![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-lightgrey?style=for-the-badge)
 
 **[English Version](./README.md)**
 
@@ -33,6 +33,7 @@
 ### 🕊️ 鋭い「キジ」：常に寄り添う
 > *視線を外さずに。*
 - **ウィンドウタイトル通知**: アプリが画面の裏に隠れていても、ウィンドウタイトルで残り時間を確認可能。作業の手を止める必要はありません。
+- **トレイ常駐 & 自動起動**: ウィンドウを閉じてもトレイに残り、Windows 起動時の自動起動にも対応。
 
 ---
 
@@ -42,9 +43,11 @@
 **デュアルレイヤー保存システム**を採用：
 
 1.  **高速アクセス**: `localStorage` による瞬時の読み書き。
-2.  **物理バックアップ**: `app-data.json` への物理ファイル保存。
+2.  **物理バックアップ**: アプリデータフォルダー内の `session-backups/pomotaro-sessions-backup.json` へ保存。
 
-たとえブラウザキャッシュがクリアされても、物理ファイルから自動的に履歴を復元します。
+たとえ WebView のストレージがクリアされても、物理ファイルから自動的に履歴を復元します。
+
+> **v1.x からのアップグレード:** Pomotaro 2.0 は Tauri v2 製です。初回起動時に旧 Electron 版のデータフォルダー（`%APPDATA%\Pomotaro\session-backups`）から自動バックアップをインポートします。
 
 ---
 
@@ -63,7 +66,8 @@
 <div align="center">
 
 ![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Electron](https://img.shields.io/badge/Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
+![Tauri](https://img.shields.io/badge/Tauri_2-24C8DB?style=for-the-badge&logo=tauri&logoColor=white)
+![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
@@ -74,13 +78,16 @@
 
 ```bash
 # 依存関係のインストール
-pnpm install
+npm install
 
-# 開発モードで起動
-pnpm dev
+# デスクトップアプリを開発モードで起動
+npm run dev:desktop
 
-# 本番ビルド
-pnpm build
+# Windows インストーラーをビルド
+npm run build:desktop
+
+# フロントエンドのみプレビュー
+npm run dev
 ```
 
 ## 📄 ライセンス

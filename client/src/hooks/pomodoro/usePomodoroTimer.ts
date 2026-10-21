@@ -19,8 +19,7 @@ export function usePomodoroTimer({
     const [isRunning, setIsRunning] = useState(false);
     const [expectedEndTime, setExpectedEndTime] = useState<number | null>(null);
 
-    // Use refs for intervals to avoid dependency cycles
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const getSessionDuration = useCallback((type: SessionType, currentSettings: PomodoroSettings): number => {
         switch (type) {
@@ -32,32 +31,6 @@ export function usePomodoroTimer({
                 return currentSettings.longBreakTime * 60;
         }
     }, []);
-
-    // Timer tick - Enhanced Accuracy
-    useEffect(() => {
-        if (isRunning && expectedEndTime) {
-            intervalRef.current = setInterval(() => {
-                const now = Date.now();
-                const remaining = Math.max(0, Math.ceil((expectedEndTime - now) / 1000));
-
-                setTimeLeft(remaining);
-
-                if (remaining <= 0) {
-                    handleSessionEnd();
-                }
-            }, 500);
-        } else {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-        }
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        };
-    }, [isRunning, expectedEndTime]);
 
     const handleSessionEnd = useCallback(() => {
         setIsRunning(false);
@@ -90,6 +63,34 @@ export function usePomodoroTimer({
             setIsRunning(true);
         }
     }, [sessionType, sessionsCompleted, settings, getSessionDuration, onSessionComplete, setSessionsCompleted]);
+
+    // Recalculate from the target timestamp rather than decrementing state. This
+    // stays correct after sleep and schedules only at the next visible-second boundary.
+    useEffect(() => {
+        if (!isRunning || !expectedEndTime) return;
+
+        const tick = () => {
+            const remainingMs = expectedEndTime - Date.now();
+            const remaining = Math.max(0, Math.ceil(remainingMs / 1000));
+            setTimeLeft(remaining);
+
+            if (remaining === 0) {
+                handleSessionEnd();
+                return;
+            }
+
+            const untilNextSecond = remainingMs % 1000 || 1000;
+            timeoutRef.current = setTimeout(tick, Math.max(20, untilNextSecond));
+        };
+
+        tick();
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+        };
+    }, [isRunning, expectedEndTime, handleSessionEnd]);
 
     const start = useCallback(() => {
         if (!isRunning) {
