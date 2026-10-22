@@ -142,6 +142,7 @@ pub fn run() {
             commands::toggle_fullscreen,
             commands::unmaximize_window,
             commands::is_maximized,
+            commands::set_window_title,
             commands::restart_app,
             commands::open_external,
             commands::set_auto_launch,

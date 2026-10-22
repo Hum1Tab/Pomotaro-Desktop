@@ -20,6 +20,8 @@
 
 **Pomotaro** is not just another timer. It is a precision-engineered tool designed to protect your focus at all costs. With millisecond-accurate timing, robust data persistence, and seamless integrations, it stands as your faithful guardian in the battle against distraction.
 
+> **v2.1.0** — app-wide language switching, the window-title timer, a much smaller first load, accessibility fixes and a Content Security Policy. See the [changelog](CHANGELOG.md).
+
 ## ✨ Powerful Features
 
 ### 🐕 The Faithful Dog: Unwavering Precision
@@ -54,7 +56,8 @@ Even if the webview storage is cleared, your session history is automatically re
 
 - **Glassmorphism Design**: sleek, dark-themed UI with vibrant orange accents.
 - **Zero-Latency Audio**: Pre-loaded High-Quality White/Pink/Brown noise.
-- **Keyboard First**: Navigate sessions instantly with arrow keys.
+- **Keyboard First**: `Space` start/pause, `←`/`→` switch sessions, `Ctrl+R` reset, `Ctrl+S` settings.
+- **Faster, lighter**: statistics, calendar, settings and stopwatch screens load on demand instead of on startup.
 
 ![Stats](./client/public/screenshots/stats_dashboard.png)
 
@@ -84,6 +87,9 @@ npm run dev:desktop
 
 # Build the Windows installer
 npm run build:desktop
+
+# Type check, unit tests and production build
+npm run verify
 
 # Frontend-only preview
 npm run dev

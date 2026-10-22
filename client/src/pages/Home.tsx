@@ -9,11 +9,13 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export default function Home() {
   const logic = useHomeLogic();
-  const { pomodoro, handleStartTimer, goToSettings, isFocusMode, appearanceSettings, showCategoryDialog, setShowCategoryDialog, handleCategoryConfirm, tomatoes, setTomatoes } = logic;
+  const { pomodoro, handleStartTimer, goToSettings, isFocusMode, appearanceSettings, showCategoryDialog, setShowCategoryDialog, handleCategoryConfirm, tomatoes, setTomatoes, nextSession, prevSession } = logic;
 
   useKeyboardShortcuts({
     startPause: () => pomodoro.isRunning ? pomodoro.pause() : handleStartTimer(),
     reset: () => pomodoro.reset(),
+    nextSession,
+    prevSession,
     toggleSettings: goToSettings,
   });
 

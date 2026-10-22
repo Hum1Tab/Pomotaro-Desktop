@@ -15,11 +15,11 @@ export function TimerTab({ logic }: { logic: HomeLogic }) {
     <>
       <ExamCountdown />
       <div className="relative flex min-h-[60vh] flex-col items-center justify-center">
-        <Button variant="ghost" size="icon" className="absolute right-4 top-4 z-10 text-white/70 hover:bg-white/10 hover:text-white" onClick={() => setIsFocusMode(true)} title={t('timer.focusMode')}>
-          <Maximize2 className="h-6 w-6" />
+        <Button variant="ghost" size="icon" className="absolute right-4 top-4 z-10 text-white/70 hover:bg-white/10 hover:text-white" onClick={() => setIsFocusMode(true)} title={t('timer.focusMode')} aria-label={t('timer.focusMode')}>
+          <Maximize2 className="h-6 w-6" aria-hidden="true" />
         </Button>
-        <Button variant="ghost" size="icon" className="absolute left-4 top-4 z-10 text-white/70 hover:bg-white/10 hover:text-white" onClick={toggleNoise} title={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')}>
-          <Waves className={`h-6 w-6 ${isNoisePlaying ? 'animate-pulse' : ''}`} />
+        <Button variant="ghost" size="icon" className="absolute left-4 top-4 z-10 text-white/70 hover:bg-white/10 hover:text-white" onClick={toggleNoise} title={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')} aria-label={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')}>
+          <Waves className={`h-6 w-6 ${isNoisePlaying ? 'animate-pulse' : ''}`} aria-hidden="true" />
         </Button>
         <div className="mb-8 scale-90 transition-transform sm:scale-100"><SessionTabs currentSession={pomodoro.sessionType} onSessionChange={pomodoro.switchSession} /></div>
         <div className="mb-12"><TimerDisplay timeLeft={pomodoro.timeLeft} sessionType={pomodoro.sessionType} /></div>

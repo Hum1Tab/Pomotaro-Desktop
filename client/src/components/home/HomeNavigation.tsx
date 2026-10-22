@@ -26,11 +26,11 @@ export function HomeNavigation({ logic }: { logic: HomeLogic }) {
         </TabsList>
         <div className="mx-1 h-8 w-px bg-border" />
         <div className="flex gap-1">
-          <Button onClick={() => { sound.playClickSound(); theme === 'dark' ? setLightTheme() : setDarkTheme(); }} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-foreground/80 transition-all hover:bg-muted/50 hover:text-foreground sm:h-12 sm:w-12" title={theme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}>
-            {theme === 'dark' ? <Sun className="h-5 w-5 sm:h-6 sm:w-6" /> : <Moon className="h-5 w-5 sm:h-6 sm:w-6" />}
+          <Button onClick={() => { sound.playClickSound(); theme === 'dark' ? setLightTheme() : setDarkTheme(); }} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-foreground/80 transition-all hover:bg-muted/50 hover:text-foreground sm:h-12 sm:w-12" title={theme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')} aria-label={theme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}>
+            {theme === 'dark' ? <Sun className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" /> : <Moon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />}
           </Button>
-          <Button onClick={goToSettings} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-foreground/80 transition-all hover:bg-muted/50 hover:text-foreground sm:h-12 sm:w-12">
-            <Settings className="h-5 w-5 sm:h-6 sm:w-6" />
+          <Button onClick={goToSettings} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-foreground/80 transition-all hover:bg-muted/50 hover:text-foreground sm:h-12 sm:w-12" title={t('settings.title')} aria-label={t('settings.title')}>
+            <Settings className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
           </Button>
         </div>
       </div>

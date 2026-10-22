@@ -39,6 +39,7 @@ export interface DesktopAPI {
   toggleFullscreen(flag: boolean): Promise<void>;
   unmaximizeWindow(): Promise<void>;
   isMaximized(): Promise<boolean>;
+  setWindowTitle(title: string): Promise<void>;
   onWindowStateChanged(callback: (state: WindowStateChange) => void): () => void;
   onUpdateStatus(callback: (message: UpdateMessage) => void): () => void;
   onUpdateError(callback: (message: UpdateMessage) => void): () => void;

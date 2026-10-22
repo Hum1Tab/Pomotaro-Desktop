@@ -40,8 +40,10 @@ export default function Settings() {
                         size="icon"
                         onClick={() => setLocation('/')}
                         className="rounded-full hover:bg-muted"
+                        aria-label={t('settings.back')}
+                        title={t('settings.back')}
                     >
-                        <ChevronLeft className="w-6 h-6" />
+                        <ChevronLeft className="w-6 h-6" aria-hidden="true" />
                     </Button>
                     <h1 className="text-2xl font-bold text-foreground">{t('settings.title')}</h1>
                 </div>

@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { SessionType, SessionRecord, DailyStats, StatsMap } from '@/types/session';
+import {
+    buildStatsCache,
+    createDailyStats,
+    mergeSessionRecords,
+    summarizeSessions,
+    toDateKey,
+    lastNDateKeys,
+} from '@/lib/session-stats';
+import type { SessionType, SessionRecord, DailyStats, StatsMap } from '@/types/session';
 
 export type { SessionType, SessionRecord, DailyStats, StatsMap };
 
@@ -103,12 +111,7 @@ export function useSessionHistory() {
             if (!Array.isArray(imported)) return false;
 
             setHistory(prev => {
-                // 既存のIDを持つセッションは除外してマージ
-                const existingIds = new Set(prev.map(s => s.id));
-                const newSessions = imported.filter(s => !existingIds.has(s.id));
-                const merged = [...newSessions, ...prev];
-                // 日付順にソート（新しい順）
-                merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                const merged = mergeSessionRecords(prev, imported);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
                 return merged;
             });
@@ -122,61 +125,20 @@ export function useSessionHistory() {
 
     // Optimization: Create a cache map indexed by date "YYYY-MM-DD"
     // Complexity: O(N) - iterates history once when it changes.
-    const statsCache = useMemo(() => {
-        const cache: Record<string, DailyStats> = {};
-
-        history.forEach(session => {
-            // Determine date string (local time)
-            const dateStr = new Date(session.timestamp).toLocaleDateString('en-CA');
-
-            if (!cache[dateStr]) {
-                cache[dateStr] = {
-                    date: dateStr,
-                    totalFocusTime: 0,
-                    pomodoroCount: 0,
-                    totalBreakTime: 0,
-                    sessions: []
-                };
-            }
-
-            const dayStats = cache[dateStr];
-            dayStats.sessions.push(session);
-
-            if (session.sessionType === 'pomodoro') {
-                dayStats.totalFocusTime += session.duration;
-                dayStats.pomodoroCount += 1;
-            } else {
-                dayStats.totalBreakTime += session.duration;
-            }
-        });
-
-        return cache;
-    }, [history]);
+    const statsCache = useMemo(() => buildStatsCache(history), [history]);
 
     const getDailyStats = useCallback((dateStr?: string): DailyStats => {
         // Current local date YYYY-MM-DD if not provided
-        const targetDate = dateStr || new Date().toLocaleDateString('en-CA');
+        const targetDate = dateStr || toDateKey(new Date());
 
         // O(1) Lookup
-        return statsCache[targetDate] || {
-            date: targetDate,
-            totalFocusTime: 0,
-            pomodoroCount: 0,
-            totalBreakTime: 0,
-            sessions: []
-        };
+        return statsCache[targetDate] || createDailyStats(targetDate);
     }, [statsCache]);
 
     const getWeeklyStats = useCallback((): StatsMap => {
-        const today = new Date();
         const stats: StatsMap = {};
-
-        // Last 7 days
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(d.getDate() - i);
-            const dateStr = d.toLocaleDateString('en-CA');
-            stats[dateStr] = getDailyStats(dateStr);
+        for (const dateKey of lastNDateKeys(new Date(), 7)) {
+            stats[dateKey] = getDailyStats(dateKey);
         }
         return stats;
     }, [getDailyStats]);
@@ -186,9 +148,8 @@ export function useSessionHistory() {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
         for (let day = 1; day <= daysInMonth; day++) {
-            const d = new Date(year, month, day);
-            const dateStr = d.toLocaleDateString('en-CA');
-            stats[dateStr] = getDailyStats(dateStr);
+            const dateKey = toDateKey(new Date(year, month, day));
+            stats[dateKey] = getDailyStats(dateKey);
         }
 
         return stats;
@@ -201,11 +162,10 @@ export function useSessionHistory() {
             let totalFocus = 0;
             let totalPomodoro = 0;
             let totalBreak = 0;
-            let allSessions: SessionRecord[] = [];
+            const allSessions: SessionRecord[] = [];
 
             for (let day = 1; day <= daysInMonth; day++) {
-                const d = new Date(year, month, day);
-                const dayStr = d.toLocaleDateString('en-CA');
+                const dayStr = toDateKey(new Date(year, month, day));
 
                 // O(1) Lookup via getDailyStats -> statsCache
                 const dStats = getDailyStats(dayStr);
@@ -213,7 +173,7 @@ export function useSessionHistory() {
                 totalFocus += dStats.totalFocusTime;
                 totalPomodoro += dStats.pomodoroCount;
                 totalBreak += dStats.totalBreakTime;
-                allSessions = [...allSessions, ...dStats.sessions];
+                allSessions.push(...dStats.sessions);
             }
 
             stats[month.toString()] = {
@@ -227,21 +187,7 @@ export function useSessionHistory() {
         return stats;
     }, [getDailyStats]);
 
-    const getTotalStats = useCallback(() => {
-        const focusSessions = history.filter(s => s.sessionType === 'pomodoro');
-        const totalFocusTime = focusSessions.reduce((sum, s) => sum + s.duration, 0);
-        const breakSessions = history.filter(s => s.sessionType === 'shortBreak' || s.sessionType === 'longBreak');
-        const totalBreakTime = breakSessions.reduce((sum, s) => sum + s.duration, 0);
-
-        const pomodoroCount = focusSessions.length;
-
-        return {
-            totalFocusTime,
-            totalBreakTime,
-            pomodoroCount,
-            totalSessions: history.length
-        };
-    }, [history]);
+    const getTotalStats = useCallback(() => summarizeSessions(history), [history]);
 
     return {
         history,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { usePomodoro } from '@/hooks/usePomodoro';
 import { useTasks } from '@/hooks/useTasks';
@@ -11,6 +11,17 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAppearance } from '@/contexts/AppearanceContext';
 import { useLanguage } from '@/hooks/useLanguage';
 import { SessionType } from '@/contexts/PomodoroContext';
+
+const ACTIVE_TAB_KEY = 'pomotaro-active-tab';
+const SESSION_ORDER: SessionType[] = ['pomodoro', 'shortBreak', 'longBreak'];
+
+function loadActiveTab(): string {
+    try {
+        return localStorage.getItem(ACTIVE_TAB_KEY) || 'timer';
+    } catch {
+        return 'timer';
+    }
+}
 
 export function useHomeLogic() {
     const [, setLocation] = useLocation();
@@ -26,14 +37,23 @@ export function useHomeLogic() {
     const { settings: appearanceSettings, updateSettings: updateAppearance } = useAppearance();
     const { t } = useLanguage();
 
-    const [activeTab, setActiveTab] = useState('timer');
+    const [activeTab, setActiveTabState] = useState(loadActiveTab);
     const [showCategoryDialog, setShowCategoryDialog] = useState(false);
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [tomatoes, setTomatoes] = useState<number[]>([]);
 
-    // Register session complete callback
+    // The session-complete handler needs the latest history/sound/notification
+    // APIs, but re-registering it on every render kept replacing the callback.
+    // Keep the newest values in a ref and register once.
+    const latestRef = useRef({ history, sound, notifications, getSelectedCategory });
     useEffect(() => {
-        pomodoro.registerSessionCompleteCallback((type: SessionType, duration: number) => {
+        latestRef.current = { history, sound, notifications, getSelectedCategory };
+    });
+
+    const { registerSessionCompleteCallback } = pomodoro;
+    useEffect(() => {
+        registerSessionCompleteCallback((type: SessionType, duration: number) => {
+            const { history, sound, notifications, getSelectedCategory } = latestRef.current;
             const category = getSelectedCategory();
             history.addSession(
                 duration,
@@ -55,7 +75,16 @@ export function useHomeLogic() {
                 notifications.notifyBreakComplete();
             }
         });
-    }, [pomodoro, history, sound, notifications]);
+    }, [registerSessionCompleteCallback]);
+
+    const setActiveTab = useCallback((tab: string) => {
+        setActiveTabState(tab);
+        try {
+            localStorage.setItem(ACTIVE_TAB_KEY, tab);
+        } catch {
+            // Remembering the tab is a convenience; never fail the UI over it.
+        }
+    }, []);
 
     // Handle Focus Mode Enter/Exit for Fullscreen
     useEffect(() => {
@@ -124,6 +153,13 @@ export function useHomeLogic() {
         pomodoro.start();
     };
 
+    // Keyboard navigation between the three session types.
+    const cycleSession = (direction: 1 | -1) => {
+        const index = SESSION_ORDER.indexOf(pomodoro.sessionType);
+        const nextIndex = (index + direction + SESSION_ORDER.length) % SESSION_ORDER.length;
+        pomodoro.switchSession(SESSION_ORDER[nextIndex]);
+    };
+
     const toggleCompactMode = async () => {
         const newCompactState = !appearanceSettings.isCompact;
         updateAppearance({ isCompact: newCompactState });
@@ -168,6 +204,8 @@ export function useHomeLogic() {
         handleAddTask,
         handleStartTimer,
         handleCategoryConfirm,
+        nextSession: () => cycleSession(1),
+        prevSession: () => cycleSession(-1),
         toggleCompactMode,
         goToSettings,
         currentCompact

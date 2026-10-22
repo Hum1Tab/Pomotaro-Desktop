@@ -97,6 +97,21 @@ pub fn is_maximized(app: AppHandle) -> Result<bool, String> {
         .map_err(|error| error.to_string())
 }
 
+/// Mirrors the remaining session time into the native title bar.
+/// The renderer is untrusted, so the string is trimmed, length capped and
+/// rejected when it contains control characters.
+#[tauri::command]
+pub fn set_window_title(app: AppHandle, title: String) -> Result<(), String> {
+    let title = title.trim();
+    if title.is_empty() || title.chars().count() > 120 || title.chars().any(|c| c.is_control()) {
+        return Err("Invalid window title".into());
+    }
+
+    main_window(&app)?
+        .set_title(title)
+        .map_err(|error| error.to_string())
+}
+
 #[tauri::command]
 pub fn restart_app(app: AppHandle) {
     update::install(&app);

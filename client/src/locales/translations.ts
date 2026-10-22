@@ -83,6 +83,10 @@ export const translations: Translations = {
         'timer.playNoise': 'Play Focus Noise',
         'timer.stopNoise': 'Stop Focus Noise',
         'timer.extension': 'Timer Extensions',
+        'timer.reset': 'Reset Timer',
+        'timer.sessionType': 'Session type',
+        'timer.focusBadge': 'Focus',
+        'timer.breakBadge': 'Break',
 
         // Tasks
         'tasks.title': 'Tasks',
@@ -126,6 +130,7 @@ export const translations: Translations = {
         'stats.categoryFocus': 'Category Focus Time',
         'stats.sessions': 'Sessions',
         'stats.history': 'History',
+        'stats.uncategorized': 'Uncategorized',
 
         // Notifications
         'notification.sessionComplete': 'Learning Session Complete',
@@ -193,6 +198,22 @@ export const translations: Translations = {
         // Other Settings
         'settings.showTaskInput': 'Show Task Input',
         'settings.alwaysOnTop': 'Always on Top',
+
+        // Discord
+        'settings.section.discord': 'Discord Integration',
+        'settings.discord.enable': 'Enable Discord Rich Presence',
+        'settings.discord.showCategory': 'Show category',
+        'settings.discord.showCategoryDesc': 'Display the current study category in your Discord status',
+        'settings.discord.showPomodoros': 'Show pomodoro count',
+        'settings.discord.showPomodorosDesc': 'Display the number of completed pomodoros',
+
+        // Updates
+        'settings.section.update': 'Updates',
+        'settings.update.check': 'Check for updates',
+        'settings.update.checking': 'Checking...',
+        'settings.update.upToDate': 'You are on the latest version',
+        'settings.update.downloaded': 'Update downloaded. Restart to apply v',
+        'settings.update.failed': 'Update check failed',
 
         // Auto Update
         'update.available': 'New version found. Starting download...',
@@ -278,6 +299,10 @@ export const translations: Translations = {
         'timer.playNoise': '集中サウンドを再生',
         'timer.stopNoise': '集中サウンドを停止',
         'timer.extension': 'タイマー延長',
+        'timer.reset': 'タイマーをリセット',
+        'timer.sessionType': 'セッションの種類',
+        'timer.focusBadge': '集中',
+        'timer.breakBadge': '休憩',
 
         // Tasks
         'tasks.title': 'タスク',
@@ -321,6 +346,7 @@ export const translations: Translations = {
         'stats.categoryFocus': 'カテゴリー別集中時間',
         'stats.sessions': 'セッション数',
         'stats.history': '履歴',
+        'stats.uncategorized': '未分類',
 
         // Notifications
         'notification.sessionComplete': '集中セッション終了！',
@@ -388,6 +414,22 @@ export const translations: Translations = {
         // Other Settings
         'settings.showTaskInput': 'タスク入力を表示',
         'settings.alwaysOnTop': '常に手前に表示',
+
+        // Discord
+        'settings.section.discord': 'Discord 連携',
+        'settings.discord.enable': 'Discord 連携を有効にする',
+        'settings.discord.showCategory': 'カテゴリーを表示',
+        'settings.discord.showCategoryDesc': 'ステータスに現在のカテゴリー名を表示します',
+        'settings.discord.showPomodoros': 'ポモドーロ数を表示',
+        'settings.discord.showPomodorosDesc': '完了したポモドーロ数を表示します',
+
+        // Updates
+        'settings.section.update': 'アップデート',
+        'settings.update.check': 'アップデートを確認',
+        'settings.update.checking': '確認中...',
+        'settings.update.upToDate': '最新バージョンです',
+        'settings.update.downloaded': 'アップデートをダウンロードしました。再起動で適用されます: v',
+        'settings.update.failed': 'アップデートの確認に失敗しました',
 
         // Auto Update
         'update.available': '新しいバージョンが見つかりました。ダウンロードを開始します...',

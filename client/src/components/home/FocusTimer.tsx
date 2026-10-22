@@ -15,11 +15,11 @@ export function FocusTimer({ logic }: { logic: HomeLogic }) {
         <div className="mt-8 flex flex-col items-center gap-12">
           <div className="origin-center scale-125 transform sm:scale-150"><TimerControls isRunning={pomodoro.isRunning} onStart={handleStartTimer} onPause={pomodoro.pause} onReset={pomodoro.reset} /></div>
           <div className="flex items-center gap-8 rounded-full border border-white/10 bg-white/5 p-2 px-6 backdrop-blur-md">
-            <Button onClick={goToSettings} variant="ghost" size="icon" className="h-12 w-12 rounded-full text-muted-foreground hover:bg-muted/20 hover:text-foreground"><Settings className="h-6 w-6" /></Button>
+            <Button onClick={goToSettings} variant="ghost" size="icon" title={t('settings.title')} aria-label={t('settings.title')} className="h-12 w-12 rounded-full text-muted-foreground hover:bg-muted/20 hover:text-foreground"><Settings className="h-6 w-6" aria-hidden="true" /></Button>
             <div className="h-6 w-px bg-white/10" />
-            <Button onClick={toggleNoise} variant="ghost" size="icon" title={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')} className={`h-12 w-12 rounded-full text-muted-foreground hover:bg-muted/20 hover:text-foreground ${isNoisePlaying ? 'animate-pulse text-primary' : ''}`}><Waves className="h-6 w-6" /></Button>
+            <Button onClick={toggleNoise} variant="ghost" size="icon" title={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')} aria-label={isNoisePlaying ? t('timer.stopNoise') : t('timer.playNoise')} className={`h-12 w-12 rounded-full text-muted-foreground hover:bg-muted/20 hover:text-foreground ${isNoisePlaying ? 'animate-pulse text-primary' : ''}`}><Waves className="h-6 w-6" aria-hidden="true" /></Button>
             <div className="h-6 w-px bg-white/10" />
-            <Button onClick={() => setIsFocusMode(false)} variant="ghost" size="icon" title={t('timer.exitFocusMode')} className="h-12 w-12 rounded-full text-muted-foreground hover:bg-muted/20 hover:text-foreground"><Minimize2 className="h-6 w-6" /></Button>
+            <Button onClick={() => setIsFocusMode(false)} variant="ghost" size="icon" title={t('timer.exitFocusMode')} aria-label={t('timer.exitFocusMode')} className="h-12 w-12 rounded-full text-muted-foreground hover:bg-muted/20 hover:text-foreground"><Minimize2 className="h-6 w-6" aria-hidden="true" /></Button>
           </div>
         </div>
         <div className="mt-4 text-xl font-medium text-muted-foreground opacity-30 sm:text-2xl">{pomodoro.sessionType === 'pomodoro' ? t('timer.focusTime') : t('timer.breakTime')}</div>

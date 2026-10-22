@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, ReactNode, useMemo } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, ReactNode, useMemo } from 'react';
 import { usePomodoroPersistence } from '@/hooks/pomodoro/usePomodoroPersistence';
 import { usePomodoroTimer } from '@/hooks/pomodoro/usePomodoroTimer';
 import { useDiscordRPC } from '@/hooks/pomodoro/useDiscordRPC';
@@ -120,8 +120,16 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         }
     }, [restoredState, setSessionType, setExpectedEndTime, setTimeLeft, setIsRunning]);
 
-    // Save State Periodicallly
+    // Save State Periodically
+    // A running timer only needs an occasional snapshot: expectedEndTime is
+    // absolute, so restoring from a 5s-old snapshot still yields the correct
+    // remaining time. Writing on every tick meant one synchronous
+    // localStorage write per second.
+    const lastPersistRef = useRef(0);
     useEffect(() => {
+        const now = Date.now();
+        if (isRunning && now - lastPersistRef.current < 5_000) return;
+        lastPersistRef.current = now;
         saveTimerState({
             isRunning,
             sessionType,
@@ -150,6 +158,15 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         }
     }, [settings.alwaysOnTop, settings.preventSleep, isRunning]);
 
+    // Keep the registration callback stable: consumers register in an effect,
+    // and an unstable identity made them re-register on every provider update.
+    const registerSessionCompleteCallback = useCallback(
+        (callback: (type: SessionType, duration: number) => void) => {
+            onSessionCompleteRef.current = callback;
+        },
+        []
+    );
+
     // Context Value
     const contextValue = useMemo(() => ({
         settings,
@@ -162,9 +179,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         pause: timer.pause,
         reset: timer.reset,
         switchSession: timer.switchSession,
-        registerSessionCompleteCallback: (callback: (type: SessionType, duration: number) => void) => {
-            onSessionCompleteRef.current = callback;
-        },
+        registerSessionCompleteCallback,
         expectedEndTime
     }), [
         settings,
@@ -176,6 +191,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         timer.pause,
         timer.reset,
         timer.switchSession,
+        registerSessionCompleteCallback,
         expectedEndTime
     ]);
 

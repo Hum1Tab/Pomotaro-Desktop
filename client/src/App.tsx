@@ -1,16 +1,25 @@
 import { Toaster } from "@/components/ui/sonner";
 import NotFound from "@/pages/NotFound";
 
+import { lazy, Suspense, useEffect } from "react";
+import { toast } from "sonner";
+
 import ErrorBoundary from "./components/ErrorBoundary";
 import ComponentErrorBoundary from "./components/ComponentErrorBoundary";
 import { AppProviders } from "./components/AppProviders";
+import { WindowTitleSync } from "./components/WindowTitleSync";
 import Home from "./pages/Home";
-import Settings from "./pages/Settings";
+import { useLanguage } from "./hooks/useLanguage";
 
 
 import { useLocation, Router as WouterRouter, Route, Switch } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { AnimatePresence, motion } from "framer-motion";
+
+// Settings is only reachable from the home screen, so it is loaded on demand.
+// This keeps the first paint small (charts and settings UI stay out of the
+// initial bundle).
+const Settings = lazy(() => import("./pages/Settings"));
 
 // Helper to freeze the location for the exiting component
 // This ensures that the 'Switch' inside the exiting motion.div
@@ -21,6 +30,14 @@ const FrozenRouter = ({ children, location, navigate }: { children: React.ReactN
   return <WouterRouter hook={staticHook}>{children}</WouterRouter>;
 };
 
+function PageFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="h-24 w-24 animate-pulse rounded-full bg-muted" aria-hidden="true" />
+    </div>
+  );
+}
+
 // ページコンポーネントをErrorBoundaryでラップ
 const SafeHome = () => (
   <ComponentErrorBoundary>
@@ -30,7 +47,9 @@ const SafeHome = () => (
 
 const SafeSettings = () => (
   <ComponentErrorBoundary>
-    <Settings />
+    <Suspense fallback={<PageFallback />}>
+      <Settings />
+    </Suspense>
   </ComponentErrorBoundary>
 );
 
@@ -69,66 +88,66 @@ function Router() {
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
-
-
-import { useEffect } from "react";
-import { toast } from "sonner";
-import { useLanguage } from "./hooks/useLanguage";
-
-function App() {
+/**
+ * Registers auto-update listeners and checks for updates once on startup.
+ * Lives inside AppProviders so it can use the shared language context.
+ */
+function UpdateNotifications() {
   const { t } = useLanguage();
 
   useEffect(() => {
-    if (window.desktopAPI) {
-      const unsubscribeStatus = window.desktopAPI.onUpdateStatus((data) => {
-        // 翻訳キーの場合は翻訳、そうでなければそのまま表示（後方互換性）
-        const message = typeof data === 'object' && data.key ? t(data.key) : String(data);
-        toast.info(message);
+    const api = window.desktopAPI;
+    if (!api) return;
+
+    const unsubscribeStatus = api.onUpdateStatus((data) => {
+      // 翻訳キーの場合は翻訳、そうでなければそのまま表示（後方互換性）
+      const message = typeof data === 'object' && data.key ? t(data.key) : String(data);
+      toast.info(message);
+    });
+
+    const unsubscribeError = api.onUpdateError((data) => {
+      // 翻訳キーの場合は翻訳してエラーメッセージを付加
+      const message = typeof data === 'object' && data.key
+        ? t(data.key) + (data.message || '')
+        : String(data);
+      toast.error(message);
+    });
+
+    const unsubscribeDownloaded = api.onUpdateDownloaded(() => {
+      toast(t('update.restartPrompt'), {
+        description: t('update.restartDesc'),
+        action: {
+          label: t('update.restart'),
+          onClick: () => api.restartApp(),
+        },
+        duration: Infinity, // Keep it visible
       });
+    });
 
-      const unsubscribeError = window.desktopAPI.onUpdateError((data) => {
-        // 翻訳キーの場合は翻訳してエラーメッセージを付加
-        const message = typeof data === 'object' && data.key
-          ? t(data.key) + (data.message || '')
-          : String(data);
-        toast.error(message);
+    // Check for updates on startup (delayed slightly to ensure UI is ready)
+    const updateTimer = window.setTimeout(() => {
+      api.checkForUpdates().catch((error) => {
+        console.error('Failed to check for updates:', error);
       });
+    }, 2000);
 
-      const unsubscribeDownloaded = window.desktopAPI.onUpdateDownloaded(() => {
-        toast(t('update.restartPrompt'), {
-          description: t('update.restartDesc'),
-          action: {
-            label: t('update.restart'),
-            onClick: () => window.desktopAPI?.restartApp(),
-          },
-          duration: Infinity, // Keep it visible
-        });
-      });
-
-      // Check for updates on startup (delayed slightly to ensure UI is ready)
-      const updateTimer = window.setTimeout(() => {
-        window.desktopAPI?.checkForUpdates().catch((error) => {
-          console.error('Failed to check for updates:', error);
-        });
-      }, 2000);
-
-      return () => {
-        unsubscribeStatus();
-        unsubscribeError();
-        unsubscribeDownloaded();
-        window.clearTimeout(updateTimer);
-      };
-    }
+    return () => {
+      unsubscribeStatus();
+      unsubscribeError();
+      unsubscribeDownloaded();
+      window.clearTimeout(updateTimer);
+    };
   }, [t]);
 
+  return null;
+}
+
+function App() {
   return (
     <ErrorBoundary>
       <AppProviders>
+        <WindowTitleSync />
+        <UpdateNotifications />
         <Toaster />
         <Router />
       </AppProviders>
@@ -137,4 +156,3 @@ function App() {
 }
 
 export default App;
-

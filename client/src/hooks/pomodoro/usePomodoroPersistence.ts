@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PomodoroSettings, SessionType } from '@/contexts/PomodoroContext';
 
 export const DEFAULT_SETTINGS: PomodoroSettings = {
@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS: PomodoroSettings = {
     rpcTextCategoryBreakingSuffix: ' の合間に休憩中',
 };
 
-interface TimerState {
+export interface TimerState {
     isRunning: boolean;
     sessionType: SessionType;
     expectedEndTime: number | null;
@@ -68,7 +68,7 @@ function loadInitialTimerState(): TimerState | null {
     return null;
 }
 
-function normalizeSettings(value: unknown): PomodoroSettings {
+export function normalizeSettings(value: unknown): PomodoroSettings {
     const saved = value && typeof value === 'object' ? value as Partial<PomodoroSettings> : {};
     return {
         ...DEFAULT_SETTINGS,
@@ -80,7 +80,7 @@ function normalizeSettings(value: unknown): PomodoroSettings {
     };
 }
 
-function normalizeTimerState(value: unknown): TimerState | null {
+export function normalizeTimerState(value: unknown): TimerState | null {
     if (!value || typeof value !== 'object') return null;
     const state = value as Partial<TimerState>;
     const sessionType = state.sessionType;
@@ -118,9 +118,15 @@ export function usePomodoroPersistence() {
     }, [sessionsCompleted]);
 
     // Save Timer State
-    const saveTimerState = (state: TimerState) => {
-        localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
-    };
+    // useCallback keeps the identity stable so the persistence effect does not
+    // re-run on every provider render.
+    const saveTimerState = useCallback((state: TimerState) => {
+        try {
+            localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
+        } catch (error) {
+            console.error('Failed to persist timer state:', error);
+        }
+    }, []);
 
     return {
         settings,

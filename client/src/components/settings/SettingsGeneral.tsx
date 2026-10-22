@@ -7,6 +7,7 @@ import { useSoundContext } from '@/contexts/SoundContext'; // Needed for export
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Minimize2, Maximize2, Download, Upload, Heart } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function SettingsGeneral() {
     const [, setLocation] = useLocation();
@@ -130,10 +131,10 @@ export function SettingsGeneral() {
 
             {/* Discord Settings */}
             <div className="space-y-4 pt-4 border-t border-border/50">
-                <h3 className="text-lg font-medium">Discord 設定</h3>
+                <h3 className="text-lg font-medium">{t('settings.section.discord')}</h3>
 
                 <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium">Discord 連携を有効にする</label>
+                    <label className="text-sm font-medium">{t('settings.discord.enable')}</label>
                     <Switch
                         checked={pomoSettings.enableDiscordRpc}
                         onCheckedChange={(checked) => {
@@ -146,8 +147,8 @@ export function SettingsGeneral() {
                     <div className="space-y-4 pl-4 border-l-2 border-border/50 animate-fade-in">
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                                <label className="text-sm font-medium">カテゴリーを表示</label>
-                                <p className="text-xs text-muted-foreground">ステータスに現在のカテゴリー名を表示します</p>
+                                <label className="text-sm font-medium">{t('settings.discord.showCategory')}</label>
+                                <p className="text-xs text-muted-foreground">{t('settings.discord.showCategoryDesc')}</p>
                             </div>
                             <Switch
                                 checked={pomoSettings.showCategoryOnRpc}
@@ -159,8 +160,8 @@ export function SettingsGeneral() {
 
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                                <label className="text-sm font-medium">ポモドーロ数を表示</label>
-                                <p className="text-xs text-muted-foreground">完了したポモドーロ数を表示します</p>
+                                <label className="text-sm font-medium">{t('settings.discord.showPomodoros')}</label>
+                                <p className="text-xs text-muted-foreground">{t('settings.discord.showPomodorosDesc')}</p>
                             </div>
                             <Switch
                                 checked={pomoSettings.showPomodorosOnRpc}
@@ -234,12 +235,12 @@ export function SettingsGeneral() {
                                                 localStorage.setItem('sessionsCompleted', data.sessionsCompleted);
                                             }
 
-                                            alert(t('settings.importSuccess'));
+                                            toast.success(t('settings.importSuccess'));
                                             // Reload to reflect data changes (Tasks, History)
                                             window.location.reload();
                                         } catch (err) {
                                             console.error(err);
-                                            alert(t('settings.importError'));
+                                            toast.error(t('settings.importError'));
                                         }
                                     };
                                     reader.readAsText(file);
@@ -265,7 +266,7 @@ export function SettingsGeneral() {
 
             {/* Update Section */}
             <div className="space-y-4 pt-4 border-t border-border/50">
-                <h3 className="text-lg font-medium">アップデート</h3>
+                <h3 className="text-lg font-medium">{t('settings.section.update')}</h3>
                 <Button
                     variant="outline"
                     className="w-full gap-2"
@@ -278,20 +279,20 @@ export function SettingsGeneral() {
                                 const version = await window.desktopAPI.checkForUpdates();
                                 setUpdateCheckStatus('idle');
                                 if (version) {
-                                    setUpdateCheckMessage(`チェック完了: v${version}`);
+                                    setUpdateCheckMessage(`${t('settings.update.downloaded')}${version}`);
                                 } else {
-                                    setUpdateCheckMessage('最新です');
+                                    setUpdateCheckMessage(t('settings.update.upToDate'));
                                 }
                             } catch (e) {
                                 console.error(e);
                                 setUpdateCheckStatus('idle');
-                                setUpdateCheckMessage('エラーが発生しました');
+                                setUpdateCheckMessage(t('settings.update.failed'));
                             }
                         }
                     }}
                 >
-                    <Download className="w-4 h-4" />
-                    {updateCheckStatus === 'checking' ? '確認中...' : 'アップデートを確認'}
+                    <Download className="w-4 h-4" aria-hidden="true" />
+                    {updateCheckStatus === 'checking' ? t('settings.update.checking') : t('settings.update.check')}
                 </Button>
                 <div className="flex flex-col items-center gap-1">
 

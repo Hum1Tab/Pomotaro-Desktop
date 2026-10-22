@@ -1,6 +1,6 @@
 [package]
 name = "pomotaro"
-version = "2.0.0"
+version = "2.1.0"
 description = "Modern, high-precision Pomodoro timer"
 authors = ["Hum1Tab"]
 license = "MIT"

@@ -2,7 +2,7 @@
   "name": "pomotaro",
   "description": "Modern, high-precision Pomodoro timer built with Tauri v2",
   "author": "Hum1Tab",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -22,6 +22,9 @@
     "tauri": "tauri",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "npm run check && npm test && npm run build:web",
     "check:rust": "cargo check --manifest-path src-tauri/Cargo.toml",
     "format": "prettier --write ."
   },

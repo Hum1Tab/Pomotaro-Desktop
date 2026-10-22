@@ -38,6 +38,9 @@ jobs:
       - name: Type check
         run: npm run check
 
+      - name: Unit tests
+        run: npm test
+
       - name: Build frontend
         run: npm run build:web
 

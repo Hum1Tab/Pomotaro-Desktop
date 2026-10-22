@@ -62,6 +62,7 @@ export const desktopAPI: DesktopAPI = {
   toggleFullscreen: (flag) => invokeCommand<void>('toggle_fullscreen', { flag }),
   unmaximizeWindow: () => invokeCommand<void>('unmaximize_window'),
   isMaximized: () => invokeCommand<boolean>('is_maximized'),
+  setWindowTitle: (title) => invokeCommand<void>('set_window_title', { title }),
   onWindowStateChanged: (callback) => subscribe('window-state-changed', callback),
   onUpdateStatus: (callback) => subscribe('update-status', callback),
   onUpdateError: (callback) => subscribe('update-error', callback),
