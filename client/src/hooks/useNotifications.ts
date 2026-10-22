@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect } from 'react';
 import { desktopAPI, isDesktop } from '@/lib/desktop-api';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export interface NotificationSettings {
     enabled: boolean;
@@ -16,6 +17,7 @@ const DEFAULT_SETTINGS: NotificationSettings = {
 };
 
 export function useNotifications() {
+    const { t } = useLanguage();
     const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
     const [permission, setPermission] = useState<NotificationPermission>(
         isDesktop ? 'granted' : 'default'
@@ -98,21 +100,25 @@ export function useNotifications() {
         if (!settings.sessionComplete) return;
 
         const minutes = Math.floor(duration / 60);
+        // `duration` describes the session that just ended; only a focus session
+        // needs the "you focused for N minutes" wording.
         const title = sessionType === 'pomodoro'
-            ? '学習セッション完了！'
-            : '休憩完了！';
-        const body = `${minutes}分間お疲れ様でした。${sessionType === 'pomodoro' ? '休憩を取りましょう。' : '次の学習セッションを開始しましょう。'}`;
+            ? t('notification.sessionComplete')
+            : t('notification.breakComplete');
+        const body = sessionType === 'pomodoro'
+            ? t('notification.sessionBody').replace('{minutes}', String(minutes))
+            : t('notification.breakBody');
 
         sendNotification(title, { body });
-    }, [settings.sessionComplete, sendNotification]);
+    }, [settings.sessionComplete, sendNotification, t]);
 
     const notifyBreakComplete = useCallback(() => {
         if (!settings.breakComplete) return;
 
-        sendNotification('休憩完了！', {
-            body: '次の学習セッションを開始しましょう。',
+        sendNotification(t('notification.breakComplete'), {
+            body: t('notification.breakBody'),
         });
-    }, [settings.breakComplete, sendNotification]);
+    }, [settings.breakComplete, sendNotification, t]);
 
     const updateSettings = useCallback((newSettings: Partial<NotificationSettings>) => {
         setSettings((prev) => ({ ...prev, ...newSettings }));

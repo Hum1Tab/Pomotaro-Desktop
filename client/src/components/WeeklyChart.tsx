@@ -10,7 +10,7 @@ import {
     CartesianGrid,
     Legend
 } from 'recharts';
-import { useSessionHistory } from '@/hooks/useSessionHistory';
+import { useSessionHistory } from '@/contexts/SessionHistoryContext';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useStudyCategories } from '@/hooks/useStudyCategories';
 

@@ -6,7 +6,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { useMemo } from 'react';
-import { SessionRecord, DailyStats, useSessionHistory } from '../hooks/useSessionHistory';
+import type { SessionRecord, DailyStats } from '../hooks/useSessionHistory';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useStudyCategories } from '@/hooks/useStudyCategories';
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { DiscordActivity } from '@shared/desktop-api';
 import { PomodoroSettings, SessionType } from '@/contexts/PomodoroContext';
+import { readSelectedCategory } from '@/lib/study-category';
 
 interface UseDiscordRPCProps {
     settings: PomodoroSettings;
@@ -19,29 +20,18 @@ function resolveStateText(
     settings: PomodoroSettings,
     sessionType: SessionType,
 ): string {
-    if (!settings.showCategoryOnRpc) {
-        return sessionType === 'pomodoro'
-            ? (settings.rpcTextWorking || 'Pomotaro で作業中')
-            : (settings.rpcTextBreaking || '休憩中');
-    }
+    const fallback = sessionType === 'pomodoro'
+        ? (settings.rpcTextWorking || 'Pomotaro で作業中')
+        : (settings.rpcTextBreaking || '休憩中');
 
-    try {
-        const savedSelectedId = localStorage.getItem('selectedCategoryId');
-        const savedCategories = localStorage.getItem('studyCategories');
-        if (!savedSelectedId || !savedCategories) throw new Error('no category');
+    if (!settings.showCategoryOnRpc) return fallback;
 
-        const categories = JSON.parse(savedCategories) as Array<{ id: string; name: string }>;
-        const currentCat = categories.find((category) => category.id === savedSelectedId);
-        if (!currentCat) throw new Error('category not found');
+    const currentCat = readSelectedCategory();
+    if (!currentCat) return fallback;
 
-        return sessionType === 'pomodoro'
-            ? `${currentCat.name}${settings.rpcTextCategoryWorkingSuffix || ' を学習中'}`
-            : `${currentCat.name}${settings.rpcTextCategoryBreakingSuffix || ' の合間に休憩中'}`;
-    } catch {
-        return sessionType === 'pomodoro'
-            ? (settings.rpcTextWorking || 'Pomotaro で作業中')
-            : (settings.rpcTextBreaking || '休憩中');
-    }
+    return sessionType === 'pomodoro'
+        ? `${currentCat.name}${settings.rpcTextCategoryWorkingSuffix || ' を学習中'}`
+        : `${currentCat.name}${settings.rpcTextCategoryBreakingSuffix || ' の合間に休憩中'}`;
 }
 
 export function useDiscordRPC({

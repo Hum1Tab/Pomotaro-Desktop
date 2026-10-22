@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ComponentErrorBoundary from "./components/ComponentErrorBoundary";
 import { AppProviders } from "./components/AppProviders";
+import { SessionCompletionRecorder } from "./components/SessionCompletionRecorder";
 import { WindowTitleSync } from "./components/WindowTitleSync";
 import Home from "./pages/Home";
 import { useLanguage } from "./hooks/useLanguage";
@@ -147,6 +148,7 @@ function App() {
     <ErrorBoundary>
       <AppProviders>
         <WindowTitleSync />
+        <SessionCompletionRecorder />
         <UpdateNotifications />
         <Toaster />
         <Router />

@@ -15,7 +15,7 @@ export type { SessionType, SessionRecord, DailyStats, StatsMap };
 // 注意: localStorageの容量制限（約5-10MB）に注意
 const STORAGE_KEY = 'pomotaro-sessions';
 
-export function useSessionHistory() {
+export function useSessionHistoryState() {
     const [history, setHistory] = useState<SessionRecord[]>([]);
 
     // Load history from localStorage on mount (無期限保持).
@@ -203,3 +203,5 @@ export function useSessionHistory() {
         importSessions,
     };
 }
+
+export type SessionHistoryApi = ReturnType<typeof useSessionHistoryState>;

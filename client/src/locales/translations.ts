@@ -135,6 +135,8 @@ export const translations: Translations = {
         // Notifications
         'notification.sessionComplete': 'Learning Session Complete',
         'notification.breakComplete': 'Break Complete',
+        'notification.sessionBody': 'You focused for {minutes} minutes. Take a break.',
+        'notification.breakBody': 'Time to start the next focus session.',
 
         // Exam Manager
         'exams.addTitle': 'Add Exam Date',
@@ -351,6 +353,8 @@ export const translations: Translations = {
         // Notifications
         'notification.sessionComplete': '集中セッション終了！',
         'notification.breakComplete': '休憩終了！',
+        'notification.sessionBody': '{minutes}分間お疲れ様でした。休憩を取りましょう。',
+        'notification.breakBody': '次の集中セッションを開始しましょう。',
 
         // Exam Manager
         'exams.addTitle': '試験日を追加',

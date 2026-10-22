@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useSessionHistory } from '../hooks/useSessionHistory'; // Corrected Relative import
+import { useSessionHistory } from '@/contexts/SessionHistoryContext';
 import { useStudyCategories } from '@/hooks/useStudyCategories';
 
 import { Button } from '@/components/ui/button';

@@ -1,5 +1,5 @@
 import { useState, useMemo, memo } from 'react';
-import { useSessionHistory } from '@/hooks/useSessionHistory';
+import { useSessionHistory } from '@/contexts/SessionHistoryContext';
 import { useStudyCategories } from '@/hooks/useStudyCategories';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';

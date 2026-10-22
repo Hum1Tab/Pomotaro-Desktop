@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { SessionHistoryProvider } from '@/contexts/SessionHistoryContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { SoundProvider } from '@/contexts/SoundContext';
 import { WhiteNoiseProvider } from '@/contexts/WhiteNoiseContext';
@@ -17,23 +18,27 @@ interface AppProvidersProps {
  *
  * Language is the outermost provider: every screen (including error and update
  * notifications) must share one language state instead of keeping its own copy.
+ * Session history sits at the top as well so a finished session is recorded even
+ * when no screen is mounted to listen for it.
  */
 export function AppProviders({ children }: AppProvidersProps) {
     return (
         <LanguageProvider>
-            <ThemeProvider defaultTheme="light">
-                <TooltipProvider>
-                    <SoundProvider>
-                        <WhiteNoiseProvider>
-                            <AppearanceProvider>
-                                <PomodoroProvider>
-                                    {children}
-                                </PomodoroProvider>
-                            </AppearanceProvider>
-                        </WhiteNoiseProvider>
-                    </SoundProvider>
-                </TooltipProvider>
-            </ThemeProvider>
+            <SessionHistoryProvider>
+                <ThemeProvider defaultTheme="light">
+                    <TooltipProvider>
+                        <SoundProvider>
+                            <WhiteNoiseProvider>
+                                <AppearanceProvider>
+                                    <PomodoroProvider>
+                                        {children}
+                                    </PomodoroProvider>
+                                </AppearanceProvider>
+                            </WhiteNoiseProvider>
+                        </SoundProvider>
+                    </TooltipProvider>
+                </ThemeProvider>
+            </SessionHistoryProvider>
         </LanguageProvider>
     );
 }

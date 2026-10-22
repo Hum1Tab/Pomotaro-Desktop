@@ -2,11 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { usePomodoro } from '@/hooks/usePomodoro';
 import { useTasks } from '@/hooks/useTasks';
-import { useSessionHistory } from '@/hooks/useSessionHistory';
 import { useStudyCategories } from '@/hooks/useStudyCategories';
 import { useSound } from '@/hooks/useSound';
 import { useWhiteNoise } from '@/hooks/useWhiteNoise';
-import { useNotifications } from '@/hooks/useNotifications';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppearance } from '@/contexts/AppearanceContext';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -28,11 +26,9 @@ export function useHomeLogic() {
 
     const pomodoro = usePomodoro();
     const tasks = useTasks();
-    const history = useSessionHistory();
     const { selectedCategoryId, getSelectedCategory } = useStudyCategories();
     const sound = useSound();
     const { isPlaying: isNoisePlaying, toggle: toggleNoise } = useWhiteNoise();
-    const notifications = useNotifications();
     const { theme, setLightTheme, setDarkTheme } = useTheme();
     const { settings: appearanceSettings, updateSettings: updateAppearance } = useAppearance();
     const { t } = useLanguage();
@@ -42,40 +38,15 @@ export function useHomeLogic() {
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [tomatoes, setTomatoes] = useState<number[]>([]);
 
-    // The session-complete handler needs the latest history/sound/notification
-    // APIs, but re-registering it on every render kept replacing the callback.
-    // Keep the newest values in a ref and register once.
-    const latestRef = useRef({ history, sound, notifications, getSelectedCategory });
+    // Session recording lives in <SessionCompletionRecorder /> so it survives
+    // navigation. The visual reward stays here and reacts to the counter.
+    const completedRef = useRef(pomodoro.sessionsCompleted);
     useEffect(() => {
-        latestRef.current = { history, sound, notifications, getSelectedCategory };
-    });
-
-    const { registerSessionCompleteCallback } = pomodoro;
-    useEffect(() => {
-        registerSessionCompleteCallback((type: SessionType, duration: number) => {
-            const { history, sound, notifications, getSelectedCategory } = latestRef.current;
-            const category = getSelectedCategory();
-            history.addSession(
-                duration,
-                type,
-                undefined,
-                undefined,
-                category?.id,
-                category?.name
-            );
-
-            // Play sound and show notification
-            if (type === 'pomodoro') {
-                sound.playSessionCompleteSound();
-                notifications.notifySessionComplete('学習セッション', duration);
-                // Add visual reward
-                setTomatoes(prev => [...prev, Date.now()]);
-            } else {
-                sound.playBreakCompleteSound();
-                notifications.notifyBreakComplete();
-            }
-        });
-    }, [registerSessionCompleteCallback]);
+        if (pomodoro.sessionsCompleted > completedRef.current) {
+            setTomatoes(prev => [...prev, Date.now()]);
+        }
+        completedRef.current = pomodoro.sessionsCompleted;
+    }, [pomodoro.sessionsCompleted]);
 
     const setActiveTab = useCallback((tab: string) => {
         setActiveTabState(tab);

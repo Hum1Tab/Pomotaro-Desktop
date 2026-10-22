@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStopwatch } from '@/hooks/useStopwatch';
-import { useSessionHistory } from '@/hooks/useSessionHistory';
+import { useSessionHistory } from '@/contexts/SessionHistoryContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Play, Pause, RotateCcw, Plus, Save } from 'lucide-react';
