@@ -24,6 +24,10 @@ A quality release focused on correctness, startup time and accessibility.
 
 ### Fixed
 
+- **Sessions finishing while another screen was open were lost.** The only
+  session-complete listener lived in the home screen, which unmounts when Settings
+  opens. History now lives in a single provider and a recorder mounted under the
+  providers persists the session regardless of the visible screen.
 - **Language switching was local to one component.** `useLanguage` created independent
   state in every component, so changing the language in Settings only re-rendered that
   card. A shared `LanguageProvider` now drives the whole app, persists the choice and
@@ -31,6 +35,7 @@ A quality release focused on correctness, startup time and accessibility.
 - **Missing translation keys** (`timer.reset`, `timer.sessionType`, `stats.uncategorized`)
   leaked raw key names into tooltips and labels.
 - **Discord and update sections were Japanese-only** even with the English UI selected.
+- **System notifications were Japanese-only**; they now follow the selected language.
 - **`alert()` dialogs** for import success/failure are now non-blocking toasts.
 - **Timer restore after sleep** is unchanged in behaviour but no longer writes to
   `localStorage` on every visible second.

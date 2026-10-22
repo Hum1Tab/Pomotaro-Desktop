@@ -12,6 +12,19 @@ Pomotaro uses a Tauri v2 shell around a React/Vite renderer. Keep new code withi
 | `src-tauri/src/commands.rs` | Validated renderer-to-native request boundary | business logic or direct UI assumptions |
 | `src-tauri/src/*.rs` | One native concern per module (Discord, updates, backup, power, tray) | renderer state |
 
+## App-wide state
+
+State that must survive navigation belongs in a provider, not in a page hook:
+
+| Provider | Owns | Why it cannot live in a page |
+| --- | --- | --- |
+| `LanguageContext` | selected language and `t()` | every screen and toast must agree on one language |
+| `SessionHistoryContext` | session records, stats queries, backup writes | a session can finish while Settings is open |
+| `PomodoroContext` | timer state, settings, Discord presence | the timer keeps running on every route |
+
+`SessionCompletionRecorder` is mounted once under the providers. It is the only place
+that records a finished session, so removing it would silently drop history entries.
+
 ## Adding a feature
 
 1. Start with a feature folder under `client/src/components/<feature>` when a screen needs multiple views or modes.
