@@ -44,7 +44,7 @@ pub struct BridgeState {
     enabled: AtomicBool,
     port: AtomicU16,
     token: Mutex<String>,
-    shutdown: Arc<AtomicBool>,
+    shutdown: Mutex<Option<Arc<AtomicBool>>>,
     pending: Mutex<HashMap<u64, mpsc::Sender<Value>>>,
     next_id: AtomicU64,
 }
@@ -85,14 +85,24 @@ pub fn enable(app: &AppHandle) -> Result<BridgeInfo, String> {
         let state = app.state::<BridgeState>();
         *state.token.lock().map_err(|_| "Bridge lock poisoned")? = token;
         state.port.store(port, Ordering::SeqCst);
-        state.shutdown.store(false, Ordering::SeqCst);
         state.enabled.store(true, Ordering::SeqCst);
+
+        // Each enable gets its own stop flag, so a rapid off/on cannot leave an
+        // older accept loop listening on a stale port.
+        let shutdown = Arc::new(AtomicBool::new(false));
+        *state.shutdown.lock().map_err(|_| "Bridge lock poisoned")? = Some(shutdown);
     }
 
     write_bridge_file(&file, &info)?;
 
     let handle = app.clone();
-    let shutdown = app.state::<BridgeState>().shutdown.clone();
+    let shutdown = app
+        .state::<BridgeState>()
+        .shutdown
+        .lock()
+        .map_err(|_| "Bridge lock poisoned")?
+        .clone()
+        .ok_or("Bridge shutdown flag is missing")?;
     thread::spawn(move || accept_loop(handle, listener, shutdown));
 
     log::info!("Pomotaro bridge listening on http://127.0.0.1:{port}");
@@ -102,7 +112,12 @@ pub fn enable(app: &AppHandle) -> Result<BridgeInfo, String> {
 pub fn disable(app: &AppHandle) {
     let state = app.state::<BridgeState>();
     state.enabled.store(false, Ordering::SeqCst);
-    state.shutdown.store(true, Ordering::SeqCst);
+
+    // Stop the accept loop that belongs to this generation.
+    let shutdown = state.shutdown.lock().ok().and_then(|mut slot| slot.take());
+    if let Some(flag) = shutdown {
+        flag.store(true, Ordering::SeqCst);
+    }
 
     let _ = state.token.lock().map(|mut token| token.clear());
 
@@ -181,7 +196,7 @@ fn handle_connection(app: &AppHandle, mut stream: TcpStream) -> Result<(), Strin
     let port = state.port.load(Ordering::SeqCst);
     let token = state.token.lock().map(|value| value.clone()).unwrap_or_default();
 
-    if !token.is_empty() && request.headers.contains_key("origin") {
+    if request.headers.contains_key("origin") {
         return respond(
             &mut stream,
             403,
