@@ -1,4 +1,5 @@
 mod backup;
+mod bridge;
 mod commands;
 mod discord;
 mod power;
@@ -131,6 +132,7 @@ pub fn run() {
         .manage(QuitState::default())
         .manage(WindowStateMonitor::default())
         .manage(discord::DiscordState::default())
+        .manage(bridge::BridgeState::default())
         .manage(power::PowerState::new())
         .manage(update::UpdateState::default())
         .invoke_handler(tauri::generate_handler![
@@ -153,6 +155,9 @@ pub fn run() {
             commands::load_session_backup,
             commands::get_backup_path,
             commands::send_notification,
+            commands::set_bridge_enabled,
+            commands::get_bridge_info,
+            commands::bridge_respond,
         ])
         .setup(|app| {
             discord::spawn(app.handle().clone());
@@ -164,6 +169,7 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|app, event| {
             if let RunEvent::Exit = event {
+                bridge::disable(app);
                 discord::shutdown(app);
                 let _ = app.save_window_state(window_state_flags());
             }

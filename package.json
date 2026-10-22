@@ -2,7 +2,7 @@
   "name": "pomotaro",
   "description": "Modern, high-precision Pomodoro timer built with Tauri v2",
   "author": "Hum1Tab",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "type": "module",
   "license": "MIT",
   "repository": {

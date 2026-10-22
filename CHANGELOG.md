@@ -5,6 +5,41 @@ All notable changes to Pomotaro are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-10-23
+
+### Added
+
+- **AI agent bridge (opt-in).** *Settings → AI Agent Integration* starts a small
+  HTTP API bound to `127.0.0.1` so an assistant can read and control the timer:
+
+  | Method | Path | Purpose |
+  | --- | --- | --- |
+  | `GET` | `/health` | Liveness probe |
+  | `GET` | `/status` | Session type, remaining seconds, completed pomodoros, timer settings |
+  | `GET` | `/stats?range=day\|week\|month` | Focus/break totals and pomodoro counts |
+  | `POST` | `/start`, `/pause`, `/reset` | Control the current session |
+  | `POST` | `/switch` | Change session type |
+
+  The endpoint and a per-run token are written to
+  `%APPDATA%\com.pomotaro.app\bridge.json` for discovery.
+- **Portable `SKILL.md`** in [`skill/pomotaro/`](skill/pomotaro/SKILL.md) so Agent
+  Skills hosts (Claude Code, Codex, Cursor, …) can operate Pomotaro.
+- **Rust unit tests** for token comparison, `Host` validation, query decoding and
+  request-body parsing.
+
+### Security
+
+- The bridge binds to loopback only, requires a 32-byte bearer token compared in
+  constant time, rejects requests that carry a browser `Origin` header, validates
+  the `Host` header, caps request size, answers with a 3-second renderer timeout,
+  and stops (removing the descriptor file) when the toggle is turned off or the
+  app exits. It is off by default.
+
+### Changed
+
+- The settings screen exposes the bridge endpoint, token and descriptor path, with
+  a one-click copy action.
+
 ## [2.1.0] - 2026-10-23
 
 A quality release focused on correctness, startup time and accessibility.
@@ -80,5 +115,6 @@ A quality release focused on correctness, startup time and accessibility.
 - Session backup to a JSON file in the app data directory, restored automatically when the
   webview storage is cleared.
 
+[2.2.0]: https://github.com/Hum1Tab/Pomotaro-Desktop/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/Hum1Tab/Pomotaro-Desktop/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/Hum1Tab/Pomotaro-Desktop/releases/tag/v2.0.0

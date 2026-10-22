@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { BridgeProvider } from '@/contexts/BridgeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SessionHistoryProvider } from '@/contexts/SessionHistoryContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -25,19 +26,21 @@ export function AppProviders({ children }: AppProvidersProps) {
     return (
         <LanguageProvider>
             <SessionHistoryProvider>
-                <ThemeProvider defaultTheme="light">
-                    <TooltipProvider>
-                        <SoundProvider>
-                            <WhiteNoiseProvider>
-                                <AppearanceProvider>
-                                    <PomodoroProvider>
-                                        {children}
-                                    </PomodoroProvider>
-                                </AppearanceProvider>
-                            </WhiteNoiseProvider>
-                        </SoundProvider>
-                    </TooltipProvider>
-                </ThemeProvider>
+                <BridgeProvider>
+                    <ThemeProvider defaultTheme="light">
+                        <TooltipProvider>
+                            <SoundProvider>
+                                <WhiteNoiseProvider>
+                                    <AppearanceProvider>
+                                        <PomodoroProvider>
+                                            {children}
+                                        </PomodoroProvider>
+                                    </AppearanceProvider>
+                                </WhiteNoiseProvider>
+                            </SoundProvider>
+                        </TooltipProvider>
+                    </ThemeProvider>
+                </BridgeProvider>
             </SessionHistoryProvider>
         </LanguageProvider>
     );

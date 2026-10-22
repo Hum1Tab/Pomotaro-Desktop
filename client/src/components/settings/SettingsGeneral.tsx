@@ -6,8 +6,9 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useSoundContext } from '@/contexts/SoundContext'; // Needed for export
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Minimize2, Maximize2, Download, Upload, Heart } from 'lucide-react';
+import { Minimize2, Maximize2, Download, Upload, Heart, Copy, Bot } from 'lucide-react';
 import { toast } from 'sonner';
+import { useBridge } from '@/contexts/BridgeContext';
 
 export function SettingsGeneral() {
     const [, setLocation] = useLocation();
@@ -15,6 +16,7 @@ export function SettingsGeneral() {
     const { settings: appearanceSettings, updateSettings: updateAppearance } = useAppearance();
     const { settings: soundSettings, updateSettings: updateSoundSettings } = useSoundContext();
     const { language, changeLanguage, t } = useLanguage();
+    const bridge = useBridge();
 
     // Auto Launch State
     const [isAutoLaunch, setIsAutoLaunch] = useState(false);
@@ -262,6 +264,68 @@ export function SettingsGeneral() {
                     <Heart className="w-4 h-4 fill-current" /> {t('settings.support.github')}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">{t('settings.support.desc')}</p>
+            </div>
+
+            {/* AI agent bridge */}
+            <div className="space-y-4 pt-4 border-t border-border/50">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Bot className="w-5 h-5" aria-hidden="true" />
+                    {t('settings.section.bridge')}
+                </h3>
+
+                <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                        <label className="text-sm font-medium">{t('settings.bridge.enable')}</label>
+                        <p className="text-xs text-muted-foreground">{t('settings.bridge.desc')}</p>
+                    </div>
+                    <Switch
+                        checked={bridge.enabled}
+                        disabled={bridge.busy}
+                        onCheckedChange={(checked) => void bridge.setEnabled(checked)}
+                        aria-label={t('settings.bridge.enable')}
+                    />
+                </div>
+
+                {bridge.error ? (
+                    <p className="text-xs text-destructive">{bridge.error}</p>
+                ) : null}
+
+                {bridge.info ? (
+                    <div className="space-y-3 rounded-lg border border-border/60 bg-secondary/40 p-4 text-xs">
+                        <div>
+                            <div className="text-muted-foreground">{t('settings.bridge.url')}</div>
+                            <code className="break-all">{bridge.info.url}</code>
+                        </div>
+                        <div>
+                            <div className="text-muted-foreground">{t('settings.bridge.token')}</div>
+                            <code className="break-all">{bridge.info.token}</code>
+                        </div>
+                        <div>
+                            <div className="text-muted-foreground">{t('settings.bridge.file')}</div>
+                            <code className="break-all">{bridge.info.file}</code>
+                        </div>
+                        <p className="text-muted-foreground">{t('settings.bridge.security')}</p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => {
+                                const payload = JSON.stringify(
+                                    { url: bridge.info?.url, token: bridge.info?.token },
+                                    null,
+                                    2,
+                                );
+                                void navigator.clipboard
+                                    .writeText(payload)
+                                    .then(() => toast.success(t('settings.bridge.copied')))
+                                    .catch(() => toast.error(t('settings.bridge.failed')));
+                            }}
+                        >
+                            <Copy className="w-4 h-4" aria-hidden="true" />
+                            {t('settings.bridge.copy')}
+                        </Button>
+                    </div>
+                ) : null}
             </div>
 
             {/* Update Section */}

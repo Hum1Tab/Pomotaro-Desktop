@@ -12,6 +12,23 @@ export interface SessionBackupResult {
   error?: string;
 }
 
+/** Connection details for the opt-in local bridge used by AI agents. */
+export interface BridgeInfo {
+  /** Base URL, always bound to 127.0.0.1 on a random port. */
+  url: string;
+  port: number;
+  /** Bearer token generated for this app run. */
+  token: string;
+  /** Path of the bridge.json descriptor agents can read. */
+  file: string;
+}
+
+export interface BridgeRequest {
+  id: number;
+  action: string;
+  payload?: unknown;
+}
+
 export interface DiscordActivity {
   details?: string;
   state?: string;
@@ -55,4 +72,8 @@ export interface DesktopAPI {
   loadSessionBackup(): Promise<SessionBackupResult>;
   getBackupPath(): Promise<string>;
   sendNotification(title: string, body: string): Promise<void>;
+  setBridgeEnabled(enabled: boolean): Promise<BridgeInfo | null>;
+  getBridgeInfo(): Promise<BridgeInfo | null>;
+  respondToBridge(id: number, response: unknown): Promise<void>;
+  onBridgeRequest(callback: (request: BridgeRequest) => void): () => void;
 }

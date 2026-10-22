@@ -217,6 +217,18 @@ export const translations: Translations = {
         'settings.update.downloaded': 'Update downloaded. Restart to apply v',
         'settings.update.failed': 'Update check failed',
 
+        // AI agent bridge
+        'settings.section.bridge': 'AI Agent Integration',
+        'settings.bridge.enable': 'Local agent bridge',
+        'settings.bridge.desc': 'Let an AI agent (Claude Code, Codex, ...) read the timer and start or pause sessions. The bridge only listens on this PC and is off by default.',
+        'settings.bridge.url': 'Endpoint',
+        'settings.bridge.token': 'Access token',
+        'settings.bridge.file': 'Discovery file',
+        'settings.bridge.security': 'The endpoint is bound to 127.0.0.1 and requires the token above. Disable the bridge when you are not using an agent.',
+        'settings.bridge.copy': 'Copy endpoint and token',
+        'settings.bridge.copied': 'Copied to the clipboard',
+        'settings.bridge.failed': 'Could not copy to the clipboard',
+
         // Auto Update
         'update.available': 'New version found. Starting download...',
         'update.downloaded': 'Download complete. Restart when ready.',
@@ -434,6 +446,18 @@ export const translations: Translations = {
         'settings.update.upToDate': '最新バージョンです',
         'settings.update.downloaded': 'アップデートをダウンロードしました。再起動で適用されます: v',
         'settings.update.failed': 'アップデートの確認に失敗しました',
+
+        // AI agent bridge
+        'settings.section.bridge': 'AIエージェント連携',
+        'settings.bridge.enable': 'ローカルエージェントブリッジ',
+        'settings.bridge.desc': 'AIエージェント（Claude Code / Codex など）からタイマーの状態取得や開始・停止をできるようにします。このPC内のみで待ち受け、初期状態はオフです。',
+        'settings.bridge.url': 'エンドポイント',
+        'settings.bridge.token': 'アクセストークン',
+        'settings.bridge.file': '検出用ファイル',
+        'settings.bridge.security': '127.0.0.1 のみで待ち受け、上記トークンが必須です。使わないときはオフにしてください。',
+        'settings.bridge.copy': 'エンドポイントとトークンをコピー',
+        'settings.bridge.copied': 'クリップボードにコピーしました',
+        'settings.bridge.failed': 'クリップボードへのコピーに失敗しました',
 
         // Auto Update
         'update.available': '新しいバージョンが見つかりました。ダウンロードを開始します...',

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ComponentErrorBoundary from "./components/ComponentErrorBoundary";
 import { AppProviders } from "./components/AppProviders";
+import { BridgeAgent } from "./components/BridgeAgent";
 import { SessionCompletionRecorder } from "./components/SessionCompletionRecorder";
 import { WindowTitleSync } from "./components/WindowTitleSync";
 import Home from "./pages/Home";
@@ -149,6 +150,7 @@ function App() {
       <AppProviders>
         <WindowTitleSync />
         <SessionCompletionRecorder />
+        <BridgeAgent />
         <UpdateNotifications />
         <Toaster />
         <Router />

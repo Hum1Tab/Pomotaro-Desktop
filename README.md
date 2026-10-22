@@ -20,7 +20,25 @@
 
 **Pomotaro** is not just another timer. It is a precision-engineered tool designed to protect your focus at all costs. With millisecond-accurate timing, robust data persistence, and seamless integrations, it stands as your faithful guardian in the battle against distraction.
 
-> **v2.1.0** — app-wide language switching, the window-title timer, a much smaller first load, accessibility fixes and a Content Security Policy. See the [changelog](CHANGELOG.md).
+> **v2.2.0** — AI agents can now drive the timer through an opt-in local bridge and a portable `SKILL.md`. See the [changelog](CHANGELOG.md).
+
+## 🤖 Drive it from an AI agent
+
+Pomotaro ships a portable [Agent Skill](skill/pomotaro/SKILL.md) and an opt-in
+local bridge, so an assistant such as Claude Code, Codex or Cursor can read the
+timer and start, pause, switch or reset sessions.
+
+1. Open **Settings → AI Agent Integration** and turn on **Local agent bridge**.
+2. Install the skill:
+   ```bash
+   mkdir -p .claude/skills
+   cp -R skill/pomotaro .claude/skills/
+   ```
+3. The agent reads `%APPDATA%\com.pomotaro.app\bridge.json` for the endpoint and token.
+
+Security: the bridge binds to `127.0.0.1` only, requires a bearer token that is
+regenerated on every launch, rejects requests carrying a browser `Origin` header,
+and is disabled by default. It cannot change settings, delete history or open links.
 
 ## ✨ Powerful Features
 

@@ -44,25 +44,28 @@ jobs:
           releaseBody: |
             ## Pomotaro v__VERSION__
 
-            A quality-focused release: faster startup, correct language switching, and the
-            window-title timer that v2.0.0 promised but never wired up.
+            Your AI assistant can now drive the timer.
 
             ### Highlights
-            - **Language switching now works everywhere.** The setting was stored per
-              component, so the rest of the UI kept the old language until restart.
-            - **Remaining time in the window title.** Visible from the taskbar while the
-              window is in the background.
-            - **Faster first paint.** Stats, calendar, settings and the stopwatch are loaded
-              on demand; the initial JavaScript payload is roughly halved.
-            - **Less background work.** Timer snapshots and Discord Rich Presence are no
-              longer rewritten every second.
-            - **Accessibility.** Visible keyboard focus, ARIA labels on icon-only buttons,
-              and support for the OS "reduce motion" setting.
-            - **Security.** A Content Security Policy is now enforced in production.
+            - **Opt-in local agent bridge.** Settings → AI Agent Integration starts a
+              `127.0.0.1`-only HTTP API. Read the timer or start, pause, reset and switch
+              sessions from Claude Code, Codex, Cursor or any tool that can call HTTP.
+            - **Portable `SKILL.md`.** Drop `skill/pomotaro/` into `.claude/skills/` and the
+              agent knows how to find `%APPDATA%\com.pomotaro.app\bridge.json`, authenticate
+              and poll for state.
+            - **Secure by default.** Loopback only, a bearer token regenerated on every
+              launch, browser `Origin` requests rejected, `Host` validated, and the bridge
+              stops (and deletes its descriptor) when you turn it off or quit the app.
+            - **Rust unit tests** cover token comparison, Host validation and request parsing.
+
+            ### Also in this release
+            - Everything from [v2.1.0](https://github.com/Hum1Tab/Pomotaro-Desktop/releases/tag/v2.1.0):
+              app-wide language switching, the window-title timer, roughly half the initial
+              JavaScript, accessibility fixes and a Content Security Policy.
 
             ### Install
             Download the Windows installer below. Windows 10/11 (x64) is supported.
-            Auto-updates are signed; v2.0.0 installs receive this version automatically.
+            Auto-updates are signed; v2.0.0 and v2.1.0 installs receive this version automatically.
           releaseDraft: false
           prerelease: false
           args: --bundles nsis

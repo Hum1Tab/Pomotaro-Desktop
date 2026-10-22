@@ -25,6 +25,24 @@ State that must survive navigation belongs in a provider, not in a page hook:
 `SessionCompletionRecorder` is mounted once under the providers. It is the only place
 that records a finished session, so removing it would silently drop history entries.
 
+## Agent bridge
+
+`src-tauri/src/bridge.rs` exposes an opt-in HTTP API on loopback. It owns no timer
+state: a request is forwarded to the renderer over the `bridge-request` event and
+the renderer answers through the `bridge_respond` command.
+
+```text
+curl -> bridge.rs (auth, Host/Origin checks, routing)
+     -> event "bridge-request" {id, action, payload}
+     -> BridgeAgent.tsx -> handleBridgeAction() -> PomodoroContext / SessionHistoryContext
+     -> command bridge_respond {id, response}
+     -> HTTP JSON
+```
+
+Keep it that way: putting timer logic in Rust would duplicate the renderer's source
+of truth and break session recording. The bridge is disabled by default and is only
+started from Settings.
+
 ## Adding a feature
 
 1. Start with a feature folder under `client/src/components/<feature>` when a screen needs multiple views or modes.

@@ -46,3 +46,6 @@ jobs:
 
       - name: Check Rust
         run: cargo check --manifest-path src-tauri/Cargo.toml --locked
+
+      - name: Rust unit tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml --locked --lib

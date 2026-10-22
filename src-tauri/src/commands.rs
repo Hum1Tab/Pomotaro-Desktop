@@ -6,6 +6,7 @@ use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_window_state::AppHandleExt;
 
 use crate::backup::{self, SessionBackupResult};
+use crate::bridge;
 use crate::discord::{self, DiscordActivity};
 use crate::power;
 use crate::update;
@@ -180,4 +181,29 @@ pub fn send_notification(app: AppHandle, title: String, body: String) -> Result<
         .body(body)
         .show()
         .map_err(|error| error.to_string())
+}
+
+/// Starts or stops the opt-in local bridge used by AI agents.
+#[tauri::command]
+pub fn set_bridge_enabled(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<Option<bridge::BridgeInfo>, String> {
+    if enabled {
+        bridge::enable(&app).map(Some)
+    } else {
+        bridge::disable(&app);
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+pub fn get_bridge_info(app: AppHandle) -> Option<bridge::BridgeInfo> {
+    bridge::info(&app)
+}
+
+/// Completes a pending bridge request with the renderer's answer.
+#[tauri::command]
+pub fn bridge_respond(app: AppHandle, id: u64, response: serde_json::Value) {
+    bridge::respond_to_renderer(&app, id, response);
 }

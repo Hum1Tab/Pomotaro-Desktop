@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import type { DesktopAPI, DiscordActivity } from '@shared/desktop-api';
+import type { DesktopAPI, DiscordActivity, BridgeInfo, BridgeRequest } from '@shared/desktop-api';
 
 export const isDesktop = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
@@ -80,6 +80,12 @@ export const desktopAPI: DesktopAPI = {
   getBackupPath: () => invokeCommand<string>('get_backup_path'),
   sendNotification: (title, body) =>
     invokeCommand<void>('send_notification', { title, body }),
+  setBridgeEnabled: (enabled) =>
+    invokeCommand<BridgeInfo | null>('set_bridge_enabled', { enabled }),
+  getBridgeInfo: () => invokeCommand<BridgeInfo | null>('get_bridge_info'),
+  respondToBridge: (id, response) =>
+    invokeCommand<void>('bridge_respond', { id, response }),
+  onBridgeRequest: (callback) => subscribe<BridgeRequest>('bridge-request', callback),
 };
 
 if (isDesktop) {
